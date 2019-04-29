@@ -5,9 +5,14 @@ uses Graph, crt;
 label 888; {again}
 
 const
- maxlevel=16;{>=1}
- maxlines=15;{>=1}
- maxspeed=5; {>1}
+ MAXLEVEL=16;{>=1}
+ MAXLINES=15;{>=1}
+ MAXSPEED=5; {>1}
+ PIXELSIZE=9;
+ FIELDWIDTH=10;
+ FIELDHEIGHT=20;
+ FIGSIZE=4;
+ FIGURECOUNT=19;
 
 var 
  speed,lines,alines,score:word;
@@ -26,10 +31,10 @@ var
  time:longint;{time corrector}
  i,j,q:integer; {technical}
 
- s,w:array[1..10,0..20] of boolean; {main and extra field matrixes with extra line and column}
- sv:array[0..20] of integer; {sum of lines}
- box:array[1..19,1..4,1..2]of integer; {pixels coordinates of all figures}
- fbox:array[1..4,1..4]of boolean; {figure matrix}
+ s,w:array[1..FIELDWIDTH,0..FIELDHEIGHT] of boolean; {main and extra field matrixes with extra line and column}
+ sv:array[0..FIELDHEIGHT] of integer; {sum of lines}
+ box:array[1..FIGURECOUNT,1..FIGSIZE,1..2]of integer; {pixels coordinates of all figures}
+ fbox:array[1..FIGSIZE,1..FIGSIZE]of boolean; {figure matrix}
 
 procedure pausepicture (a:longint);
 begin
@@ -73,10 +78,14 @@ begin
   readkey;
 end;{timing}
 
-procedure eraser(px,py:integer);
+procedure eraser(px,py,x0,y0:integer);
+var
+ x,y:integer;
 begin
  setfillstyle(1,7);
- bar(px,py,px+7,py+7);
+ x:=x0+px*PIXELSIZE;
+ y:=y0+py*PIXELSIZE;
+ bar(x,y,x+7,y+7);
 end;{eraser}
 
 procedure savepixel;
@@ -92,15 +101,15 @@ begin
  setfillstyle(1,0);
  bar(3,3,6,6);
 
- spix:=imagesize(1,1,8,8);
+ spix:=imagesize(1,1,PIXELSIZE-1,PIXELSIZE-1);
  getmem(pix,spix);
- getimage(1,1,8,8,pix^);
- eraser(1,1);
+ getimage(1,1,PIXELSIZE-1,PIXELSIZE-1,pix^);
+ eraser(0,0,1,1);
 end;{savepixel}
 
-procedure pixel (px,py:integer);
+procedure pixel (px,py,x0,y0:integer);
 begin
- putimage(px,py,pix^,0);
+ putimage(x0+px*PIXELSIZE,y0+py*PIXELSIZE,pix^,0);
 end;{pixel}
 
 procedure playground;
@@ -342,60 +351,78 @@ end;{savefigures}
 
 {====================================================}
 
-procedure newfigure(f0,x0,y0:integer);
+procedure newfig(f0,xi,yi,x0,y0:integer);
 var 
  x,y:integer;
 begin
- for i:=1 to 4 do
-  for j:=1 to 4 do
-   fbox[i,j]:=false;
-
- for i:=1 to 4 do 
+ for i:=1 to FIGSIZE do
+  for j:=1 to FIGSIZE do
+   fbox[i,j]:=false; 
+ for i:=1 to FIGSIZE do 
  begin
   x:=box[f0,i,1];
   y:=box[f0,i,2];
   fbox[x,y]:=true;
-  pixel((x-1)*9+x0,(y-1)*9+y0);
+  pixel(xi+x-1,yi+y-1,x0,y0);
  end;
+end;{newfig}
+
+procedure newfigure;
+begin
+ newfig(f,xnow,ynow,leftx,topy);
 end;{newfigure}
 
-procedure delfigure(f0,x0,y0:integer);
+procedure newfnext;
+begin
+ newfig(fnext,0,0,xm,topy);
+end;{newfnext}
+
+procedure delfig(f0,xi,yi,x0,y0:integer);
 var 
  x,y:integer;
 begin
- for i:=1 to 4 do
+ for i:=1 to FIGSIZE do
  begin
-  x:=box[f0,i,1]-1;
-  y:=box[f0,i,2]-1;
-  eraser(x*9+x0,y*9+y0);
+  x:=box[f0,i,1];
+  y:=box[f0,i,2];
+  eraser(xi+x-1,yi+y-1,x0,y0);
  end;
+end;{delfig}
+
+procedure delfigure;
+begin
+ delfig(f,xnow,ynow,leftx,topy);
 end;{delfigure}
+
+procedure delfnext;
+begin
+ delfig(fnext,0,0,xm,topy);
+end;{delfnext}
 
 procedure fullrow(y0:integer);
 begin
- for i:=0 to 9 do
-  pixel(i*9+leftx,y0);
+ for i:=0 to FIELDWIDTH-1 do
+  pixel(i,y0,leftx,topy);
 end;{fullrow}
 
 procedure delrow(y0:integer);
 begin
- for i:=0 to 9 do
-  eraser(i*9+leftx,y0);
+ for i:=0 to FIELDWIDTH-1 do
+  eraser(i,y0,leftx,topy);
 end;{delrow}
 
 procedure drawlevel;
 begin
- for j:=0 to (21-level) do
-  for i:=1 to 10 do 
-  begin
+ for j:=0 to (FIELDHEIGHT-level+1) do
+ begin
+  sv[j]:=0;
+  for i:=1 to FIELDWIDTH do 
    s[i,j]:=false;
-   sv[j]:=0;
-  end;
-
+ end;
  if (level>1) 
   then
-   for j:=(22-level) to 20 do
-    for i:=1 to 10 do 
+   for j:=(FIELDHEIGHT-level+2) to FIELDHEIGHT do
+    for i:=1 to FIELDWIDTH do 
     begin
      if random(2)=0 
       then s[i,j]:=false
@@ -403,29 +430,29 @@ begin
      if s[i,j]
       then begin
        sv[j]:=sv[j]+1;
-       pixel(leftx+(i-1)*9,topy+(j-1)*9);
+       pixel(i-1,j-1,leftx,topy);
       end;
     end;
 end;{drawlevel}
 
 function checkfall: boolean;
 var
- fboxv:array[1..4]of integer; 
+ fboxv:integer; 
  bv:boolean;
  u,v:integer;
 begin
  bv:=true;
- for i:=1 to 4 do 
+ for i:=1 to FIGSIZE do 
  begin
-  fboxv[i]:=0;
-  u:=(xnow-leftx) div 9 + i;
-  for j:=1 to 4 do
+  fboxv:=0;
+  for j:=1 to FIGSIZE do
    if fbox[i,j]
-    then fboxv[i]:=j;
-  if (fboxv[i]<>0) 
+    then fboxv:=j;
+  if (fboxv<>0) 
    then begin
-    v:=(ynow-topy) div 9 + fboxv[i]+1;
-    bv:=bv and not s[u,v] and (v<21);
+    u:=xnow+i;
+    v:=ynow+fboxv+1;
+    bv:=bv and not s[u,v] and (v<=FIELDHEIGHT);
    end;
  end;
  checkfall:=bv;
@@ -433,45 +460,45 @@ end;{checkfall}
 
 function checkleft: boolean;
 var
- fboxv:array[1..4]of integer; 
+ fboxv:integer; 
  bv:boolean;
  u,v:integer;
 begin
  bv:=true;
- for j:=1 to 4 do 
+ for j:=1 to FIGSIZE do 
  begin
-  fboxv[j]:=0;
-  v:=(ynow-topy) div 9 + j;
-  for i:=4 downto 1 do
+  fboxv:=0;
+  for i:=FIGSIZE downto 1 do
    if fbox[i,j]
-    then fboxv[j]:=i;
-   if (fboxv[j]<>0) 
-    then begin
-     u:=(xnow-leftx) div 9 + fboxv[j]-1;
-     bv:=bv and not s[u,v] and (u>0);
-    end;
+    then fboxv:=i;
+  if (fboxv<>0) 
+   then begin
+    v:=ynow+j;
+    u:=xnow+fboxv-1;
+    bv:=bv and not s[u,v] and (u>0);
+   end;
  end;
  checkleft:=bv;
 end;{checkleft}
 
 function checkright: boolean;
 var
- fboxv:array[1..4]of integer; 
+ fboxv:integer; 
  bv:boolean;
  u,v:integer;
 begin
  bv:=true;
- for j:=1 to 4 do 
+ for j:=1 to FIGSIZE do 
  begin
-  fboxv[j]:=0;
-  v:=(ynow-topy) div 9 + j;
-  for i:=1 to 4 do
+  fboxv:=0;
+  for i:=1 to FIGSIZE do
    if fbox[i,j]
-    then fboxv[j]:=i;
-  if (fboxv[j]<>0) 
+    then fboxv:=i;
+  if (fboxv<>0) 
    then begin
-    u:=(xnow-leftx) div 9 + fboxv[j]+1;
-    bv:=bv and not s[u,v] and (u<11);
+    v:=ynow+j;
+    u:=xnow+fboxv+1;
+    bv:=bv and not s[u,v] and (u<=FIELDWIDTH);
    end;
  end;
  checkright:=bv;
@@ -481,9 +508,9 @@ procedure moveright;
 begin
  if checkright 
   then begin
-   delfigure(f,xnow,ynow);
-   xnow:=xnow+9;
-   newfigure(f,xnow,ynow);
+   delfigure;
+   inc(xnow);
+   newfigure;
   end;
 end; {moveright}
 
@@ -491,9 +518,9 @@ procedure moveleft;
 begin
  if checkleft 
   then begin
-   delfigure(f,xnow,ynow);
-   xnow:=xnow-9;
-   newfigure(f,xnow,ynow);
+   delfigure;
+   dec(xnow);
+   newfigure;
   end;
 end;{moveleft}
 
@@ -501,9 +528,9 @@ procedure movedown;
 begin
  if checkfall 
   then begin
-   delfigure(f,xnow,ynow);
-   ynow:=ynow+9;
-   newfigure(f,xnow,ynow);
+   delfigure;
+   inc(ynow);
+   newfigure;
   end;
 end;{movedown}
 
@@ -511,42 +538,42 @@ procedure checkrot(a,b:integer);
 var 
  u,v:integer;
 begin
- u:=(xnow-leftx) div 9 + a;
- v:=(ynow-topy) div 9 + b;
+ u:=xnow+a;
+ v:=ynow+b;
  case u of
   0:begin
    moveright;
-   u:=(xnow-leftx) div 9 + a;
+   u:=xnow+a;
   end;
   11:begin
    moveleft;
    if f=3 
     then moveleft;
-   u:=(xnow-leftx) div 9 + a;
+   u:=xnow+a;
   end;
  end;
  if (v=0) 
   then begin
    movedown;
-   v:=(ynow-topy) div 9 + b;
+   v:=ynow+b;
   end;
  
  rot:=rot and not s[u,v] 
-  and (u>0) and (u<11) and (v>0) and (v<21);
+  and (u>0) and (u<=FIELDWIDTH) and (v>0) and (v<=FIELDHEIGHT);
 end;{checkrot}
 
 function checkrotate(newf:integer): boolean;
 var
- newbox:array[1..4,1..4]of boolean;
+ newbox:array[1..FIGSIZE,1..FIGSIZE]of boolean;
 begin
  if(newf=f)
   then rot:=false
   else begin
    rot:=true;
-   for i:=1 to 4 do 
+   for i:=1 to FIGSIZE do 
     newbox[box[newf,i,1],box[newf,i,2]]:=true;
-   for i:=1 to 4 do
-    for j:=1 to 4 do
+   for i:=1 to FIGSIZE do
+    for j:=1 to FIGSIZE do
      if not fbox[i,j] and newbox[i,j]
       then checkrot(i,j);
   end;
@@ -567,18 +594,18 @@ begin
  end;
  if checkrotate(newf)
   then begin
-   delfigure(f,xnow,ynow);
+   delfigure;
    f:=newf;
-   newfigure(f,xnow,ynow);
+   newfigure;
   end;
 end;{rotate}
 
 procedure crash;
 begin
- delfigure(f,xnow,ynow);
+ delfigure;
  while checkfall do
-  ynow:=ynow+9;
- newfigure(f,xnow,ynow);
+  inc(ynow);
+ newfigure;
 end;{crash}
 
 procedure pause;
@@ -660,7 +687,7 @@ begin
        down:=true;
       end;
       #53,#83,#115,#155,#235:
-       n:=630-(speed-1)*480 div (maxspeed-1);
+       n:=630-(speed-1)*480 div (MAXSPEED-1);
       #0: case readkey of
         #72: begin
          rotate;
@@ -675,10 +702,10 @@ begin
          down:=true;
         end;
         #80: 
-         n:=630-(speed-1)*480 div (maxspeed-1);
+         n:=630-(speed-1)*480 div (MAXSPEED-1);
       end;
     end;
-  until n>(625-(speed-1)*480 div (maxspeed-1));
+  until n>(625-(speed-1)*480 div (MAXSPEED-1));
   movedown;
  end;{while}
 end;{fall}
@@ -689,13 +716,13 @@ var
 begin
  p:=1;
  v:=1;
- for i:=1 to 4 do 
+ for i:=1 to FIGSIZE do 
  begin
-  for j:=1 to 4 do
+  for j:=1 to FIGSIZE do
    if fbox[i,j]
     then begin
-     u:=(xnow-leftx) div 9 + i;
-     v:=(ynow-topy) div 9 + j;
+     u:=xnow+i;
+     v:=ynow+j;
      s[u,v]:=true;
      sv[v]:=sv[v]+1;
     end;
@@ -707,16 +734,16 @@ end;{addfigure}
 procedure delete;
 var 
  z,h:integer;
- k:array[1..4] of integer; {full rows to be deleted}
+ k:array[1..FIGSIZE] of integer; {full rows to be deleted}
 begin
- for j:=1 to 4 do
+ for j:=1 to FIGSIZE do
   k[j]:=0;
  j:=0;
  q:=p; {lowest added square}
 
  {remember indexes of full rows in array K}
  repeat
-  if (sv[q]=10) 
+  if (sv[q]=FIELDWIDTH) 
    then begin
     inc(j);
     k[j]:=q; 
@@ -745,14 +772,14 @@ begin
    {blink with full rows}
    delay(time*250);
    for z:=1 to j do 
-    delrow((k[z]-1)*9+topy);
+    delrow(k[z]-1);
    delay(time*250);
    for z:=1 to j do 
-    fullrow((k[z]-1)*9+topy);
+    fullrow(k[z]-1);
    delay(time*250);
    for z:=1 to j do 
    begin
-    delrow((k[z]-1)*9+topy);
+    delrow(k[z]-1);
     sv[k[z]]:=0;
    end;
    delay(time*250);
@@ -764,32 +791,32 @@ begin
    begin
     if (sv[z]=0) 
      then begin
-      for j:=1 to 10 do
+      for j:=1 to FIELDWIDTH do
        s[j,z]:=false;
       continue;
      end
      else begin
       inc(h);
-      for j:=1 to 10 do 
+      for j:=1 to FIELDWIDTH do 
       begin
        w[j,h]:=s[j,z];
        s[j,z]:=false;
       end;
       sv[z]:=0;
-      delrow((z-1)*9+topy);
+      delrow(z-1);
      end;
    end;
 
    {draw lowered lines}
-   for i:=0 to (h-1) do 
+   for i:=1 to h do 
    begin
-    z:=k[1]-h+i+1;
-    for j:=1 to 10 do 
+    z:=k[1]-h+i;
+    for j:=1 to FIELDWIDTH do 
     begin
-     s[j,z]:=w[j,i+1];
+     s[j,z]:=w[j,i];
      if s[j,z] 
       then begin
-       pixel(leftx+(j-1)*9,topy+(z-1)*9);
+       pixel(j-1,z-1,leftx,topy);
        sv[z]:=sv[z]+1;
       end;
     end;
@@ -812,16 +839,16 @@ end;{hello}
 
 procedure finishspeed;
 begin
- for j:=q-1 to 20 do 
+ for j:=q-1 to FIELDHEIGHT do 
  begin
-  delrow(topy+(j-1)*9);
+  delrow(j-1);
   sv[j]:=0;
  end;
  inc(speed);
  setfillstyle(1,7);
  settextstyle(0,0,1);
  str(speed,a);
- if speed<=maxspeed 
+ if speed<=MAXSPEED 
   then begin
    bar(xm+49,topy+171,xm+100,topy+181);
    outtextxy(xm+50,topy+172,a);{speed}
@@ -866,30 +893,30 @@ end;{again}
 
 procedure looser;
 begin
- for j:=20 downto 1 do 
+ for j:=FIELDHEIGHT downto 1 do 
  begin 
   if (j mod 2 = 0) 
    then 
-    for i:=9 downto 0 do 
+    for i:=FIELDWIDTH-1 downto 0 do 
     begin
-     pixel(leftx+i*9,topy+(j-1)*9);
+     pixel(i,j-1,leftx,topy);
      delay(time*20);
     end
    else
-    for i:=0 to 9 do 
+    for i:=0 to FIELDWIDTH-1 do 
     begin 
-     pixel(leftx+i*9,topy+(j-1)*9);
+     pixel(i,j-1,leftx,topy);
      delay(time*20);
     end;
  end;
- for j:=1 to 20 do 
-  delrow(topy+(j-1)*9);
+ for j:=1 to FIELDHEIGHT do 
+  delrow(j-1);
 end;{looser}
 
 procedure goodbye;
 begin
- for j:=1 to 20 do 
-  delrow(topy+(j-1)*9);
+ for j:=1 to FIELDHEIGHT do 
+  delrow(j-1);
  settextstyle(0,0,2);
  outtextxy(leftx+13,topy+50,'Come');
  outtextxy(leftx+15,topy+80,'back');
@@ -900,7 +927,7 @@ end;{goodbye}
 
 procedure epicwin;
 begin
- delfigure(fnext,xm,topy);
+ delfnext;
  settextstyle(0,0,2);
  outtextxy(leftx+20,topy+50,'You');
  outtextxy(leftx+20,topy+80,'did');
@@ -959,6 +986,8 @@ begin
  alines:=0;
  score:=0;
  level:=1;
+ f:=random(FIGURECOUNT)+1;
+ fnext:=random(FIGURECOUNT)+1;
  
  {ready? go!}
  hello;
@@ -970,7 +999,7 @@ begin
  settextstyle(0,0,1);
  str(level,a);
  bar(xm+49,topy+156,xm+100,topy+166);
- if (level<=maxlevel) {level}
+ if (level<=MAXLEVEL) {level}
   then outtextxy(xm+50,topy+157,a);
 end;{writelevel}
 
@@ -985,30 +1014,30 @@ end;{startlevel}
 procedure drawfigures;
 begin
  {draw next figure}
- delfigure(fnext,xm,topy);
- fnext:=1+random(19);
- newfigure(fnext,xm,topy);
+ delfnext;
+ fnext:=random(FIGURECOUNT)+1;
+ newfnext;
 
  {top left point of figure}
- xnow:=leftx+27; 
- ynow:=topy-9;
+ xnow:=3; 
+ ynow:=-1;
  case f of
   3,8,9,11:
-   ynow:=ynow+9; 
+   inc(ynow);
  end;
  
  {draw current figure}
- newfigure(f,xnow,ynow); 
+ newfigure; 
 end;{drawfigures}
 
 procedure nextspeed;
 begin
  {clear screen and go to next speed}
  finishspeed; 
- if speed<=maxspeed 
+ if speed<=MAXSPEED 
   then win
   else 
-   if level<maxlevel 
+   if level<MAXLEVEL 
     then winlevel;
 end;{nextspeed}
 
@@ -1026,13 +1055,11 @@ begin
  while not finish do {game session}
  begin
   startgame;
-  f:=1+random(19);
-  fnext:=1+random(19);
   888:
   repeat {one level}
    startlevel;
    writelevel;
-   while (speed<=maxspeed) do {one speed}
+   while (speed<=MAXSPEED) do {one speed}
    begin
     lines:=0;
     {initial filling of field matrix with zeros + level}
@@ -1064,12 +1091,12 @@ begin
       end;
 
      f:=fnext;
-    until (lines>=maxlines); {one figure fall}
+    until (lines>=MAXLINES); {one figure fall}
     nextspeed;
    end; {one speed}
    inc(level);
    writelevel;
-  until (level>maxlevel); {one level}
+  until (level>MAXLEVEL); {one level}
   epicwin;
  end; {game session}
 end.
