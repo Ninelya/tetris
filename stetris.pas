@@ -638,6 +638,11 @@ begin
  end;
 end;{pause}
 
+function speeddelay:integer;
+begin
+ speeddelay:=630-(speed-1)*480 div (MAXSPEED-1);
+end;
+
 procedure fall;
 var 
  n:real;
@@ -687,7 +692,7 @@ begin
        down:=true;
       end;
       #53,#83,#115,#155,#235:
-       n:=630-(speed-1)*480 div (MAXSPEED-1);
+       n:=speeddelay;
       #0: case readkey of
         #72: begin
          rotate;
@@ -702,10 +707,10 @@ begin
          down:=true;
         end;
         #80: 
-         n:=630-(speed-1)*480 div (MAXSPEED-1);
+         n:=speeddelay;
       end;
     end;
-  until n>(625-(speed-1)*480 div (MAXSPEED-1));
+  until n>(speeddelay-5);
   movedown;
  end;{while}
 end;{fall}
