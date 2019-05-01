@@ -13,7 +13,10 @@ const
  FIELDHEIGHT=20;
  FIGSIZE=4;
  FIGURECOUNT=19;
-
+ TOPY=73;   {top left point of the field}
+ LEFTX=275;
+ XM=370; {left coordinate of the next figure in menu}
+ 
 var 
  speed,lines,alines,score:word;
  finish,rot:boolean;
@@ -21,160 +24,19 @@ var
  
  level:integer;{level number}
  f,fnext:integer; {number of current and next figures}
- leftx,topy:integer; {top left point of the field}
- xm:integer; {coords of the next figure in menu}
  p:integer; {bottom left point of fallen figure}
  d,m,er:integer;{for graphics setup}
  xnow,ynow:integer; {current coords of the figure}
  pix:pointer;{one square}
  spix:longint; {size of the square}
- time:longint;{time corrector}
+ time:longint;{number of ticks in 1 milisecond}
  i,j,q:integer; {technical}
 
  s,w:array[1..FIELDWIDTH,0..FIELDHEIGHT] of boolean; {main and extra field matrixes with extra line and column}
  sv:array[0..FIELDHEIGHT] of integer; {sum of lines}
- box:array[1..FIGURECOUNT,1..FIGSIZE,1..2]of integer; {pixels coordinates of all figures}
  fbox:array[1..FIGSIZE,1..FIGSIZE]of boolean; {figure matrix}
-
-procedure pausepicture (a:longint);
-begin
- if a>65500 
-  then begin
-   for i:=1 to (a div 65500) do 
-    delay(65500);
-   delay(a mod 65500);
-  end
-  else delay(a);
-end;
-
-procedure timing;
-var 
- a:longint; {quantity of timer ticks in 5 secs of delay}
- b:longint; {quantity of delay in 5 secs of real time}
- stimer: longint absolute $0040:$006C;
-begin
- writeln;
- writeln(' Correcting delay will take about 5 seconds, please wait.');
- a:=stimer;
- b:=0;
- while stimer<=(a+46) do 
- begin
-  delay(1);
-  inc(b); 
- end;
- a:=stimer;
- pausepicture(b);
- a:=stimer-a; 
- while (keypressed) do 
-  readkey;
- writeln(' 1 sec of runtime = delay(',round(b*1000/(a*55))+1,')');
- writeln(' Press any key to continue.');
- time:=round(b/(a*55));
- if ((time mod 1)>4) or (time<1) 
-  then inc(time);
- readkey;
- clrscr;
- while (keypressed) do 
-  readkey;
-end;{timing}
-
-procedure eraser(px,py,x0,y0:integer);
-var
- x,y:integer;
-begin
- setfillstyle(1,7);
- x:=x0+px*PIXELSIZE;
- y:=y0+py*PIXELSIZE;
- bar(x,y,x+7,y+7);
-end;{eraser}
-
-procedure savepixel;
-begin
- setlinestyle(0,0,1);
- setcolor(0);
- moveto(1,1);
- linerel(0,7);
- linerel(7,0);
- linerel(0,-7);
- linerel(-7,0);
-
- setfillstyle(1,0);
- bar(3,3,6,6);
-
- spix:=imagesize(1,1,PIXELSIZE-1,PIXELSIZE-1);
- getmem(pix,spix);
- getimage(1,1,PIXELSIZE-1,PIXELSIZE-1,pix^);
- eraser(0,0,1,1);
-end;{savepixel}
-
-procedure pixel (px,py,x0,y0:integer);
-begin
- putimage(x0+px*PIXELSIZE,y0+py*PIXELSIZE,pix^,0);
-end;{pixel}
-
-procedure playground;
-begin
- setlinestyle(0,0,1);
- setcolor(0);
-
- moveto((getmaxx-94) div 2,70); {roof}
- linerel(94,0);
-
- moverel(0,3); {right}
- linerel(0,178);
-
- moverel(0,3); {floor}
- linerel(-94,0);
-
- moverel(0,-3); {left}
- linerel(0,-178);
-end;{playground}
-
-procedure menu;
-begin
- settextstyle(0,0,3);
- outtextxy(leftx-25,topy-50,'Tetris');
- settextstyle(0,0,1);
-
- outtextxy(xm,topy+45,'Lines:');
- outtextxy(xm,topy+60,'Score:');
- outtextxy(xm,topy+157,'Level:');
- outtextxy(xm,topy+172,'Speed:');
-
- setcolor(8);
- outtextxy(leftx-200,topy+55,'Pause:');
- outtextxy(leftx-200,topy+75,'Exit:');
- outtextxy(leftx-200,topy+95,'Rotate:');
- outtextxy(leftx-200,topy+115,'Faster:');
- outtextxy(leftx-200,topy+135,'Left:');
- outtextxy(leftx-200,topy+155,'Right:');
- outtextxy(leftx-200,topy+175,'Fall:');
-
- outtextxy(leftx-130,topy+55,'Enter');
- outtextxy(leftx-130,topy+75,'Escape');
- outtextxy(leftx-130,topy+95,'num 8');
- outtextxy(leftx-130,topy+115,'num 5');
- outtextxy(leftx-130,topy+135,'num 4');
- outtextxy(leftx-130,topy+155,'num 6');
- outtextxy(leftx-130,topy+175,'num 0');
-
- outtextxy(leftx-70,topy+95,'W');
- outtextxy(leftx-70,topy+115,'S');
- outtextxy(leftx-70,topy+135,'A');
- outtextxy(leftx-70,topy+155,'D');
- outtextxy(leftx-70,topy+175,'Space');
-
- outtextxy(leftx-50,topy+95,chr(24)); {arrow up}
- outtextxy(leftx-50,topy+115,chr(25)); {arrow down}
- outtextxy(leftx-50,topy+135,chr(27)); {arrow left}
- outtextxy(leftx-50,topy+155,chr(26)); {arrow right}
-
- outtextxy(getmaxx-115,getmaxy-15,'Homeniuk Nina');
- setcolor(0);
-end;{menu}
-
-{====================================================}
-
+ box:array[1..FIGURECOUNT,1..FIGSIZE,1..2]of integer; {pixels coordinates of all figures}
+ 
 procedure savefigures;
 begin
  box[1,1,1]:=2; {....}
@@ -351,7 +213,166 @@ end;{savefigures}
 
 {====================================================}
 
-procedure newfig(f0,xi,yi,x0,y0:integer);
+procedure pausepicture (ticks:longint);
+begin
+ if ticks>65500 
+  then begin
+   for i:=1 to (ticks div 65500) do 
+    delay(65500);
+   delay(ticks mod 65500);
+  end
+  else delay(ticks);
+end;
+
+procedure timing;
+var 
+ ticks:longint; {quantity of timer ticks in 5 secs of delay}
+ delays:longint; {quantity of delay in 5 secs of real time}
+ stimer:longint absolute $0040:$006C;
+begin
+ writeln;
+ writeln(' Correcting delay will take about 5 seconds, please wait.');
+ ticks:=stimer;
+ delays:=0;
+ while stimer<=(ticks+46) do 
+ begin
+  delay(1);
+  inc(delays); 
+ end;
+ ticks:=stimer;
+ pausepicture(delays);
+ ticks:=stimer-ticks; 
+ while (keypressed) do 
+  readkey;
+ writeln(' 1 sec of runtime = delay(',round(delays/(ticks*55)*1000)+1,')');
+ writeln(' Press any key to continue.');
+ time:=round(delays/(ticks*55));
+ if ((time mod 1)>4) or (time<1) 
+  then inc(time);
+ readkey;
+ clrscr;
+ while (keypressed) do 
+  readkey;
+end;{timing}
+
+procedure fieldbar(x1,y1,x2,y2:integer);
+begin
+ bar(LEFTX+x1,TOPY+y1,LEFTX+x2,TOPY+y2);
+end;{fieldbar}
+
+procedure menubar(x1,y1,x2,y2:integer);
+begin
+ bar(XM+x1,TOPY+y1,XM+x2,TOPY+y2);
+end;{menubar}
+
+procedure eraser(px,py,x0,y0:integer);
+var
+ x,y:integer;
+begin
+ x:=x0+px*PIXELSIZE;
+ y:=y0+py*PIXELSIZE;
+ setfillstyle(1,7);
+ bar(x,y,x+7,y+7);
+end;{eraser}
+
+procedure savepixel;
+begin
+ setlinestyle(0,0,1);
+ setcolor(0);
+ moveto(1,1);
+ linerel(0,7);
+ linerel(7,0);
+ linerel(0,-7);
+ linerel(-7,0);
+
+ setfillstyle(1,0);
+ bar(3,3,6,6);
+
+ spix:=imagesize(1,1,PIXELSIZE-1,PIXELSIZE-1);
+ getmem(pix,spix);
+ getimage(1,1,PIXELSIZE-1,PIXELSIZE-1,pix^);
+ eraser(0,0,1,1);
+end;{savepixel}
+
+procedure playground;
+begin
+ setlinestyle(0,0,1);
+ setcolor(0);
+
+ moveto((getmaxx-94) div 2,70); {roof}
+ linerel(94,0);
+
+ moverel(0,3); {right}
+ linerel(0,178);
+
+ moverel(0,3); {floor}
+ linerel(-94,0);
+
+ moverel(0,-3); {left}
+ linerel(0,-178);
+end;{playground}
+
+procedure writeonfield(x,y:integer;w:string);
+begin
+ outtextxy(LEFTX+x,TOPY+y,w);
+end;{writeonfield}
+
+procedure writeonmenu(x,y:integer;w:string);
+begin
+ outtextxy(XM+x,TOPY+y,w);
+end;{writeonmenu}
+
+procedure menu;
+begin
+ settextstyle(0,0,3);
+ writeonfield(-25,-50,'Tetris');
+ settextstyle(0,0,1);
+
+ writeonmenu(0,45,'Lines:');
+ writeonmenu(0,60,'Score:');
+ writeonmenu(0,157,'Level:');
+ writeonmenu(0,172,'Speed:');
+
+ setcolor(8);
+ writeonfield(-200,55,'Pause:');
+ writeonfield(-200,75,'Exit:');
+ writeonfield(-200,95,'Rotate:');
+ writeonfield(-200,115,'Faster:');
+ writeonfield(-200,135,'Left:');
+ writeonfield(-200,155,'Right:');
+ writeonfield(-200,175,'Fall:');
+
+ writeonfield(-130,55,'Enter');
+ writeonfield(-130,75,'Escape');
+ writeonfield(-130,95,'num 8');
+ writeonfield(-130,115,'num 5');
+ writeonfield(-130,135,'num 4');
+ writeonfield(-130,155,'num 6');
+ writeonfield(-130,175,'num 0');
+
+ writeonfield(-70,95,'W');
+ writeonfield(-70,115,'S');
+ writeonfield(-70,135,'A');
+ writeonfield(-70,155,'D');
+ writeonfield(-70,175,'Space');
+
+ writeonfield(-50,95,chr(24)); {arrow up}
+ writeonfield(-50,115,chr(25)); {arrow down}
+ writeonfield(-50,135,chr(27)); {arrow left}
+ writeonfield(-50,155,chr(26)); {arrow right}
+
+ outtextxy(getmaxx-115,getmaxy-15,'Homeniuk Nina');
+ setcolor(0);
+end;{menu}
+
+{====================================================}
+
+procedure pixel (px,py,x0:integer);
+begin
+ putimage(x0+px*PIXELSIZE,TOPY+py*PIXELSIZE,pix^,0);
+end;{pixel}
+
+procedure newfig(f0,xi,yi,x0:integer);
 var 
  x,y:integer;
 begin
@@ -363,21 +384,21 @@ begin
   x:=box[f0,i,1];
   y:=box[f0,i,2];
   fbox[x,y]:=true;
-  pixel(xi+x-1,yi+y-1,x0,y0);
+   pixel(xi+x-1,yi+y-1,x0);
  end;
 end;{newfig}
 
 procedure newfigure;
 begin
- newfig(f,xnow,ynow,leftx,topy);
+ newfig(f,xnow,ynow,LEFTX);
 end;{newfigure}
 
 procedure newfnext;
 begin
- newfig(fnext,0,0,xm,topy);
+ newfig(fnext,0,0,XM);
 end;{newfnext}
 
-procedure delfig(f0,xi,yi,x0,y0:integer);
+procedure delfig(f0,xi,yi,x0:integer);
 var 
  x,y:integer;
 begin
@@ -385,55 +406,31 @@ begin
  begin
   x:=box[f0,i,1];
   y:=box[f0,i,2];
-  eraser(xi+x-1,yi+y-1,x0,y0);
+  eraser(xi+x-1,yi+y-1,x0,TOPY);
  end;
 end;{delfig}
 
 procedure delfigure;
 begin
- delfig(f,xnow,ynow,leftx,topy);
+ delfig(f,xnow,ynow,LEFTX);
 end;{delfigure}
 
 procedure delfnext;
 begin
- delfig(fnext,0,0,xm,topy);
+ delfig(fnext,0,0,XM);
 end;{delfnext}
 
 procedure fullrow(y0:integer);
 begin
  for i:=0 to FIELDWIDTH-1 do
-  pixel(i,y0,leftx,topy);
+  pixel(i,y0,LEFTX);
 end;{fullrow}
 
 procedure delrow(y0:integer);
 begin
  for i:=0 to FIELDWIDTH-1 do
-  eraser(i,y0,leftx,topy);
+  eraser(i,y0,LEFTX,TOPY);
 end;{delrow}
-
-procedure drawlevel;
-begin
- for j:=0 to (FIELDHEIGHT-level+1) do
- begin
-  sv[j]:=0;
-  for i:=1 to FIELDWIDTH do 
-   s[i,j]:=false;
- end;
- if (level>1) 
-  then
-   for j:=(FIELDHEIGHT-level+2) to FIELDHEIGHT do
-    for i:=1 to FIELDWIDTH do 
-    begin
-     if random(2)=0 
-      then s[i,j]:=false
-      else s[i,j]:=true;
-     if s[i,j]
-      then begin
-       sv[j]:=sv[j]+1;
-       pixel(i-1,j-1,leftx,topy);
-      end;
-    end;
-end;{drawlevel}
 
 function checkfall: boolean;
 var
@@ -612,36 +609,36 @@ procedure pause;
 begin
  setcolor(8);
  settextstyle(0,0,2);
- outtextxy(xm,topy+80,'Pause');
+ writeonmenu(0,80,'Pause');
  settextstyle(0,0,1);
  setfillstyle(1,8);
- pieslice(xm+30,topy+120,180,360,20);
- bar(xm+10,topy+115,xm+50,topy+120);
- bar(xm+5,topy+140,xm+55,topy+144);
+ pieslice(XM+30,TOPY+120,180,360,20);
+ menubar(10,115,50,120);
+ menubar(5,140,55,144);
  setlinestyle(0,0,3);
- circle(xm+54,topy+125,7);
+ circle(XM+54,TOPY+125,7);
  setlinestyle(0,0,1);
  setfillstyle(1,7);
  setcolor(0);
 
  for i:=2 to 4 do begin
-  putpixel(xm+i*10,topy+110,0);
-  putpixel(xm+i*10,topy+109,0);
-  putpixel(xm+i*10,topy+108,0);
-  putpixel(xm+1+i*10,topy+107,0);
-  putpixel(xm+2+i*10,topy+106,0);
-  putpixel(xm+2+i*10,topy+105,0);
-  putpixel(xm+2+i*10,topy+104,0);
-  putpixel(xm+1+i*10,topy+103,0);
-  putpixel(xm+i*10,topy+102,0);
-  putpixel(xm+i*10,topy+101,0);
+  putpixel(XM+i*10,TOPY+110,0);
+  putpixel(XM+i*10,TOPY+109,0);
+  putpixel(XM+i*10,TOPY+108,0);
+  putpixel(XM+i*10+1,TOPY+107,0);
+  putpixel(XM+i*10+2,TOPY+106,0);
+  putpixel(XM+i*10+2,TOPY+105,0);
+  putpixel(XM+i*10+2,TOPY+104,0);
+  putpixel(XM+i*10+1,TOPY+103,0);
+  putpixel(XM+i*10,TOPY+102,0);
+  putpixel(XM+i*10,TOPY+101,0);
  end;
 end;{pause}
 
 function speeddelay:integer;
 begin
  speeddelay:=630-(speed-1)*480 div (MAXSPEED-1);
-end;
+end;{speeddelay}
 
 procedure fall;
 var 
@@ -658,55 +655,55 @@ begin
    delay(time);
    n:=n+1;
    if keypressed 
-    then case readkey of
-      #27: begin
+    then case readkey of			{866 symbol table (ASCII, OEM, DOS)}
+      #27: begin 					{ESC}
        finish:=true; 
        exit;
       end;
-      #13: begin
+      #13: begin					{Enter}
        pause;
-       if readkey=#27 
+       if readkey=#27 				{ESC}
         then begin
          finish:=true; 
          exit;
         end
         else begin 
          setfillstyle(1,7);
-         bar(xm-3,topy+70,xm+100,topy+155); 
+         menubar(-3,70,100,155); 
         end;
       end;
-      #32,#48: begin
+      #48,#32: begin				{num0,Space}
        crash;
        exit;
       end;
-      #56,#87,#119,#150,#230: begin
+      #56,#87,#119,#150,#230: begin {num8,W,w,Ц,ц}
        rotate;
        down:=true;
       end;
-      #54,#68,#100,#130,#162: begin
+      #54,#68,#100,#130,#162: begin	{num6,D,d,В,в}
        moveright;
        down:=true;
       end;
-      #52,#65,#97,#148,#228: begin
+      #52,#65,#97,#148,#228: begin	{num4,A,a,Ф,ф}
        moveleft;
        down:=true;
       end;
-      #53,#83,#115,#155,#235:
+      #53,#83,#115,#155,#235:		{num2,S,s,І,і}
        n:=speeddelay;
       #0: case readkey of
-        #72: begin
+        #72: begin 					{Up}
          rotate;
          down:=true;
         end;
-        #77: begin
+        #77: begin 					{Right}
          moveright;
          down:=true;
         end;
-        #75:begin
+        #75:begin 					{Left}
          moveleft;
          down:=true;
         end;
-        #80: 
+        #80: 						{Down}
          n:=speeddelay;
       end;
     end;
@@ -714,27 +711,6 @@ begin
   movedown;
  end;{while}
 end;{fall}
-
-procedure addfigure;
-var 
- u,v:integer;
-begin
- p:=1;
- v:=1;
- for i:=1 to FIGSIZE do 
- begin
-  for j:=1 to FIGSIZE do
-   if fbox[i,j]
-    then begin
-     u:=xnow+i;
-     v:=ynow+j;
-     s[u,v]:=true;
-     sv[v]:=sv[v]+1;
-    end;
-  if (v>p) 
-   then p:=v;
- end;
-end;{addfigure}
 
 procedure delete;
 var 
@@ -765,14 +741,14 @@ begin
 
    lines:=lines+j;
    alines:=alines+j;
-   bar(xm+49,topy+44,xm+100,topy+54);
+   menubar(49,44,100,54);
    str(alines,a);
-   outtextxy(xm+50,topy+45,a);{rows}
+   writeonmenu(50,45,a);{rows}
 
    score:=score+50+j*50; 
-   bar(xm+49,topy+59,xm+100,topy+69);
+   menubar(49,59,100,69);
    str(score,a);
-   outtextxy(xm+50,topy+60,a);{scores}
+   writeonmenu(50,60,a);{scores}
 
    {blink with full rows}
    delay(time*250);
@@ -821,7 +797,7 @@ begin
      s[j,z]:=w[j,i];
      if s[j,z] 
       then begin
-       pixel(j-1,z-1,leftx,topy);
+       pixel(j-1,z-1,LEFTX);
        sv[z]:=sv[z]+1;
       end;
     end;
@@ -835,11 +811,11 @@ end;{delete}
 procedure hello;
  begin
  settextstyle(0,0,2);
- outtextxy(leftx,topy+70,'Ready?');
- outtextxy(leftx+25,topy+105,'Go!');
+ writeonfield(0,70,'Ready?');
+ writeonfield(25,105,'Go!');
  readkey;
  setfillstyle(1,7);
- bar(leftx,topy+49,leftx+90,topy+130);
+ fieldbar(0,49,90,130);
 end;{hello}
 
 procedure finishspeed;
@@ -855,45 +831,45 @@ begin
  str(speed,a);
  if speed<=MAXSPEED 
   then begin
-   bar(xm+49,topy+171,xm+100,topy+181);
-   outtextxy(xm+50,topy+172,a);{speed}
+   menubar(49,171,100,181);
+   writeonmenu(50,172,a);{speed}
   end;
 end;{finishspeed}
 
 procedure win;
 begin
  settextstyle(0,0,2);
- outtextxy(leftx+18,topy+50,'Win!');
- outtextxy(leftx,topy+80,'Speed+');
- outtextxy(leftx+23,topy+110,':-)');
+ writeonfield(18,50,'Win!');
+ writeonfield(0,80,'Speed+');
+ writeonfield(23,110,':-)');
  pausepicture(time*1500);
  setfillstyle(1,7);
- bar(leftx,topy+49,leftx+90,topy+130);
+ fieldbar(0,49,90,130);
 end;{win}
 
 procedure winlevel;
 begin
  settextstyle(0,0,2);
- outtextxy(leftx+18,topy+50,'Win!');
- outtextxy(leftx+6,topy+80,'Level');
- outtextxy(leftx,topy+110,'up :-)');
+ writeonfield(18,50,'Win!');
+ writeonfield(6,80,'Level');
+ writeonfield(0,110,'up :-)');
  pausepicture(time*1500);
  setfillstyle(1,7);
- bar(leftx,topy+49,leftx+90,topy+130);
+ fieldbar(0,49,90,130);
 end;{winlevel}
 
 procedure again;
 begin
  settextstyle(0,0,2);
- outtextxy(leftx+20,topy+50,'Try');
- outtextxy(leftx+5,topy+80,'again');
- outtextxy(leftx+23,topy+110,':-)');
+ writeonfield(20,50,'Try');
+ writeonfield(5,80,'again');
+ writeonfield(23,110,':-)');
+ settextstyle(0,0,1);
  readkey;
  setfillstyle(1,7);
- bar(leftx+4,topy+49,leftx+82,topy+130);
- settextstyle(0,0,1);
- bar(xm+49,topy+171,xm+100,topy+181);
- bar(xm+49,topy+156,xm+100,topy+166);
+ fieldbar(4,49,82,130);
+ menubar(49,171,100,181);
+ menubar(49,156,100,166);
 end;{again}
 
 procedure looser;
@@ -904,13 +880,13 @@ begin
    then 
     for i:=FIELDWIDTH-1 downto 0 do 
     begin
-     pixel(i,j-1,leftx,topy);
+     pixel(i,j-1,LEFTX);
      delay(time*20);
     end
    else
     for i:=0 to FIELDWIDTH-1 do 
     begin 
-     pixel(i,j-1,leftx,topy);
+     pixel(i,j-1,LEFTX);
      delay(time*20);
     end;
  end;
@@ -923,9 +899,9 @@ begin
  for j:=1 to FIELDHEIGHT do 
   delrow(j-1);
  settextstyle(0,0,2);
- outtextxy(leftx+13,topy+50,'Come');
- outtextxy(leftx+15,topy+80,'back');
- outtextxy(leftx+1,topy+110,'soon:)');
+ writeonfield(13,50,'Come');
+ writeonfield(15,80,'back');
+ writeonfield(1,110,'soon:)');
  pausepicture(time*1500);
  halt;
 end;{goodbye}
@@ -934,14 +910,14 @@ procedure epicwin;
 begin
  delfnext;
  settextstyle(0,0,2);
- outtextxy(leftx+20,topy+50,'You');
- outtextxy(leftx+20,topy+80,'did');
- outtextxy(leftx+21,topy+110,'it!');
+ writeonfield(20,50,'You');
+ writeonfield(20,80,'did');
+ writeonfield(21,110,'it!');
  settextstyle(0,0,1);
- bar(xm+49,topy+171,xm+100,topy+181);
- bar(xm+49,topy+156,xm+100,topy+166); 
+ menubar(49,171,100,181);
+ menubar(49,156,100,166); 
  pausepicture(time*1500);
- bar(leftx,topy+49,leftx+90,topy+130);
+ fieldbar(0,49,90,130);
  readkey;
 end;{epicwin}
 
@@ -953,7 +929,7 @@ begin
  freemem(pix,spix);
  closegraph;
  halt;
-end; {closegame}
+end;{closegame}
 
 procedure setupgraph;
 begin
@@ -977,11 +953,7 @@ begin
 
  {draw game field}
  playground; 
- {top left point of the field}
- leftx:=getx+3;
- topy:=gety;
- {top left point of right menu}
- xm:=leftx+95;
+
  {draw side menu}
  menu; 
 end;{setupplayground}
@@ -998,23 +970,47 @@ begin
  hello;
 end;{startgame}
 
+procedure startlevel;
+begin
+ settextstyle(0,0,1);
+ speed:=1;
+ menubar(49,171,100,181);
+ writeonmenu(50,172,'1');{speed}
+end;{startlevel}
+
 procedure writelevel;
 begin
  setfillstyle(1,7);
  settextstyle(0,0,1);
  str(level,a);
- bar(xm+49,topy+156,xm+100,topy+166);
+ menubar(49,156,100,166);
  if (level<=MAXLEVEL) {level}
-  then outtextxy(xm+50,topy+157,a);
+  then writeonmenu(50,157,a);
 end;{writelevel}
 
-procedure startlevel;
+procedure drawlevel;
 begin
- settextstyle(0,0,1);
- speed:=1;
- bar(xm+49,topy+171,xm+100,topy+181);
- outtextxy(xm+50,topy+172,'1');{speed}
-end;{startlevel}
+ for j:=0 to (FIELDHEIGHT-level+1) do
+ begin
+  sv[j]:=0;
+  for i:=1 to FIELDWIDTH do 
+   s[i,j]:=false;
+ end;
+ if (level>1) 
+  then
+   for j:=(FIELDHEIGHT-level+2) to FIELDHEIGHT do
+    for i:=1 to FIELDWIDTH do 
+    begin
+     if random(2)=0 
+      then s[i,j]:=false
+      else s[i,j]:=true;
+     if s[i,j]
+      then begin
+       sv[j]:=sv[j]+1;
+       pixel(i-1,j-1,LEFTX);
+      end;
+    end;
+end;{drawlevel}
 
 procedure drawfigures;
 begin
@@ -1034,6 +1030,27 @@ begin
  {draw current figure}
  newfigure; 
 end;{drawfigures}
+
+procedure addfigure;
+var 
+ u,v:integer;
+begin
+ p:=1;
+ v:=1;
+ for i:=1 to FIGSIZE do 
+ begin
+  for j:=1 to FIGSIZE do
+   if fbox[i,j]
+    then begin
+     u:=xnow+i;
+     v:=ynow+j;
+     s[u,v]:=true;
+     sv[v]:=sv[v]+1;
+    end;
+  if (v>p) 
+   then p:=v;
+ end;
+end;{addfigure}
 
 procedure nextspeed;
 begin
