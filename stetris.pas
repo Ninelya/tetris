@@ -2,304 +2,329 @@ program tetris;
 {$R-}
 uses Graph, crt;
 
-label 888; {again}
+label 888; {Again}
 
 const
- MAXLEVEL=16;{>=1}
- MAXLINES=15;{>=1}
- MAXSPEED=5; {>1}
- PIXELSIZE=9;
- FIELDWIDTH=10;
- FIELDHEIGHT=20;
- FIGSIZE=4;
- FIGURECOUNT=19;
- TOPY=73;   {top left point of the field}
+ MAX_LEVEL=16;{>=1}
+ MAX_LINES=15;{>=1}
+ MAX_SPEED=5; {>1}
+
+ PIXEL_SIZE=9;
+ FIELD_WIDTH=10;
+ FIELD_HEIGHT=20;
+ FIG_SIZE=4;
+ FIGURE_COUNT=19;
+
+ TOPY=73; {top left point of the field}
  LEFTX=275;
- XM=370; {left coordinate of the next figure in menu}
+ XM=370; {left coordinate of the next figure in Menu}
+
+ STANDARD_LINE=0;
+ HOR_TEXT=0;
+ SMALL_TEXT=1;
+ MEDIUM_TEXT=2;
+ BIG_TEXT=3;
+ MAX_DELAY=65500;
  
 var 
- speed,lines,alines,score:word;
- finish,rot:boolean;
- a:string;
+ _Speed,_Score,_OneSpeedLines,_TotalLines:word;
+ _IsFinish:boolean;
+ _Output:string;
  
- level:integer;{level number}
- f,fnext:integer; {number of current and next figures}
- p:integer; {bottom left point of fallen figure}
- d,m,er:integer;{for graphics setup}
- xnow,ynow:integer; {current coords of the figure}
- pix:pointer;{one square}
- spix:longint; {size of the square}
- time:longint;{number of ticks in 1 milisecond}
- i,j,q:integer; {technical}
+ _Level:integer;{level number}
+ _FigureNow,_FigNext:integer; {number of current and next figures}
+ _Point:integer; {bottom left point of fallen figure}
+ _GraphDriver,_GraphMode,_GraphError:integer;{for graphics setup}
+ _Xnow,_Ynow:integer; {current coords of the figure}
+ _Pix:pointer;{one square}
+ _PixSize:longint; {size of the square}
+ _Time:longint;{number of ticks in 1 milisecond}
+ i,j:integer; {technical}
 
- s,w:array[1..FIELDWIDTH,0..FIELDHEIGHT] of boolean; {main and extra field matrixes with extra line and column}
- sv:array[0..FIELDHEIGHT] of integer; {sum of lines}
- fbox:array[1..FIGSIZE,1..FIGSIZE]of boolean; {figure matrix}
- box:array[1..FIGURECOUNT,1..FIGSIZE,1..2]of integer; {pixels coordinates of all figures}
+ {main and extra field matrixes with extra line and column}
+ _MainField,_MainFieldCopy:array[1..FIELD_WIDTH,0..FIELD_HEIGHT] of boolean; 
+ _LinesSum:array[0..FIELD_HEIGHT] of integer; {sum of lines}
+ _FigBox:array[1..FIG_SIZE,1..FIG_SIZE] of boolean; {figure matrix}
+ _Box:array[1..FIGURE_COUNT,1..FIG_SIZE,1..2] of integer; {Pixels coordinates of all figures}
  
-procedure savefigures;
+procedure SaveFigures;
 begin
- box[1,1,1]:=2; {....}
- box[1,1,2]:=2; {.xx.}
- box[1,2,1]:=2; {.xx.}
- box[1,2,2]:=3; {....}
- box[1,3,1]:=3;
- box[1,3,2]:=2;
- box[1,4,1]:=3;
- box[1,4,2]:=3;
+ _Box[1,1,1]:=2; {....}
+ _Box[1,1,2]:=2; {.xx.}
+ _Box[1,2,1]:=2; {.xx.}
+ _Box[1,2,2]:=3; {....}
+ _Box[1,3,1]:=3;
+ _Box[1,3,2]:=2;
+ _Box[1,4,1]:=3;
+ _Box[1,4,2]:=3;
  
- box[2,1,1]:=1; {....} 
- box[2,1,2]:=2; {xxxx}
- box[2,2,1]:=2; {....}
- box[2,2,2]:=2; {....}
- box[2,3,1]:=3;
- box[2,3,2]:=2;
- box[2,4,1]:=4;
- box[2,4,2]:=2;
+ _Box[2,1,1]:=1; {....} 
+ _Box[2,1,2]:=2; {xxxx}
+ _Box[2,2,1]:=2; {....}
+ _Box[2,2,2]:=2; {....}
+ _Box[2,3,1]:=3;
+ _Box[2,3,2]:=2;
+ _Box[2,4,1]:=4;
+ _Box[2,4,2]:=2;
  
- box[3,1,1]:=2; {.x..}
- box[3,1,2]:=1; {.x..}
- box[3,2,1]:=2; {.x..}
- box[3,2,2]:=2; {.x..}
- box[3,3,1]:=2;
- box[3,3,2]:=3;
- box[3,4,1]:=2;
- box[3,4,2]:=4;
+ _Box[3,1,1]:=2; {.x..}
+ _Box[3,1,2]:=1; {.x..}
+ _Box[3,2,1]:=2; {.x..}
+ _Box[3,2,2]:=2; {.x..}
+ _Box[3,3,1]:=2;
+ _Box[3,3,2]:=3;
+ _Box[3,4,1]:=2;
+ _Box[3,4,2]:=4;
  
- box[4,1,1]:=2; {....}
- box[4,1,2]:=2; {.x..}
- box[4,2,1]:=2; {.xx.}
- box[4,2,2]:=3; {..x.}
- box[4,3,1]:=3;
- box[4,3,2]:=3;
- box[4,4,1]:=3;
- box[4,4,2]:=4;
+ _Box[4,1,1]:=2; {....}
+ _Box[4,1,2]:=2; {.x..}
+ _Box[4,2,1]:=2; {.xx.}
+ _Box[4,2,2]:=3; {..x.}
+ _Box[4,3,1]:=3;
+ _Box[4,3,2]:=3;
+ _Box[4,4,1]:=3;
+ _Box[4,4,2]:=4;
  
- box[5,1,1]:=2; {....}
- box[5,1,2]:=2; {.xx.}
- box[5,2,1]:=3; {xx..}
- box[5,2,2]:=2; {....}
- box[5,3,1]:=1;
- box[5,3,2]:=3;
- box[5,4,1]:=2;
- box[5,4,2]:=3;
+ _Box[5,1,1]:=2; {....}
+ _Box[5,1,2]:=2; {.xx.}
+ _Box[5,2,1]:=3; {xx..}
+ _Box[5,2,2]:=2; {....}
+ _Box[5,3,1]:=1;
+ _Box[5,3,2]:=3;
+ _Box[5,4,1]:=2;
+ _Box[5,4,2]:=3;
  
- box[6,1,1]:=3; {....}
- box[6,1,2]:=2; {..x.}
- box[6,2,1]:=3; {.xx.}
- box[6,2,2]:=3; {.x..}
- box[6,3,1]:=2;
- box[6,3,2]:=3;
- box[6,4,1]:=2;
- box[6,4,2]:=4;
+ _Box[6,1,1]:=3; {....}
+ _Box[6,1,2]:=2; {..x.}
+ _Box[6,2,1]:=3; {.xx.}
+ _Box[6,2,2]:=3; {.x..}
+ _Box[6,3,1]:=2;
+ _Box[6,3,2]:=3;
+ _Box[6,4,1]:=2;
+ _Box[6,4,2]:=4;
  
- box[7,1,1]:=1; {....}
- box[7,1,2]:=2; {xx..}
- box[7,2,1]:=2; {.xx.}
- box[7,2,2]:=2; {....}
- box[7,3,1]:=2;
- box[7,3,2]:=3;
- box[7,4,1]:=3;
- box[7,4,2]:=3;
+ _Box[7,1,1]:=1; {....}
+ _Box[7,1,2]:=2; {xx..}
+ _Box[7,2,1]:=2; {.xx.}
+ _Box[7,2,2]:=2; {....}
+ _Box[7,3,1]:=2;
+ _Box[7,3,2]:=3;
+ _Box[7,4,1]:=3;
+ _Box[7,4,2]:=3;
  
- box[8,1,1]:=1; {.x..}
- box[8,1,2]:=2; {xxx.}
- box[8,2,1]:=2; {....}
- box[8,2,2]:=2; {....}
- box[8,3,1]:=2;
- box[8,3,2]:=1;
- box[8,4,1]:=3;
- box[8,4,2]:=2;
+ _Box[8,1,1]:=1; {.x..}
+ _Box[8,1,2]:=2; {xxx.}
+ _Box[8,2,1]:=2; {....}
+ _Box[8,2,2]:=2; {....}
+ _Box[8,3,1]:=2;
+ _Box[8,3,2]:=1;
+ _Box[8,4,1]:=3;
+ _Box[8,4,2]:=2;
  
- box[9,1,1]:=1; {.x..}
- box[9,1,2]:=2; {xx..}
- box[9,2,1]:=2; {.x..}
- box[9,2,2]:=2; {....}
- box[9,3,1]:=2;
- box[9,3,2]:=1;
- box[9,4,1]:=2;
- box[9,4,2]:=3;
+ _Box[9,1,1]:=1; {.x..}
+ _Box[9,1,2]:=2; {xx..}
+ _Box[9,2,1]:=2; {.x..}
+ _Box[9,2,2]:=2; {....}
+ _Box[9,3,1]:=2;
+ _Box[9,3,2]:=1;
+ _Box[9,4,1]:=2;
+ _Box[9,4,2]:=3;
  
- box[10,1,1]:=1; {....}
- box[10,1,2]:=2; {xxx.}
- box[10,2,1]:=2; {.x..}
- box[10,2,2]:=2; {....}
- box[10,3,1]:=2;
- box[10,3,2]:=3;
- box[10,4,1]:=3;
- box[10,4,2]:=2;
+ _Box[10,1,1]:=1; {....}
+ _Box[10,1,2]:=2; {xxx.}
+ _Box[10,2,1]:=2; {.x..}
+ _Box[10,2,2]:=2; {....}
+ _Box[10,3,1]:=2;
+ _Box[10,3,2]:=3;
+ _Box[10,4,1]:=3;
+ _Box[10,4,2]:=2;
  
- box[11,1,1]:=2; {.x..}
- box[11,1,2]:=1; {.xx.}
- box[11,2,1]:=2; {.x..}
- box[11,2,2]:=2; {....}
- box[11,3,1]:=2;
- box[11,3,2]:=3;
- box[11,4,1]:=3;
- box[11,4,2]:=2;
+ _Box[11,1,1]:=2; {.x..}
+ _Box[11,1,2]:=1; {.xx.}
+ _Box[11,2,1]:=2; {.x..}
+ _Box[11,2,2]:=2; {....}
+ _Box[11,3,1]:=2;
+ _Box[11,3,2]:=3;
+ _Box[11,4,1]:=3;
+ _Box[11,4,2]:=2;
  
- box[12,1,1]:=2; {....}
- box[12,1,2]:=4; {.xx.}
- box[12,2,1]:=2; {.x..}
- box[12,2,2]:=2; {.x..}
- box[12,3,1]:=2;
- box[12,3,2]:=3;
- box[12,4,1]:=3;
- box[12,4,2]:=2;
+ _Box[12,1,1]:=2; {....}
+ _Box[12,1,2]:=4; {.xx.}
+ _Box[12,2,1]:=2; {.x..}
+ _Box[12,2,2]:=2; {.x..}
+ _Box[12,3,1]:=2;
+ _Box[12,3,2]:=3;
+ _Box[12,4,1]:=3;
+ _Box[12,4,2]:=2;
  
- box[13,1,1]:=1; {....}
- box[13,1,2]:=3; {x...}
- box[13,2,1]:=3; {xxx.}
- box[13,2,2]:=3; {....}
- box[13,3,1]:=2;
- box[13,3,2]:=3;
- box[13,4,1]:=1;
- box[13,4,2]:=2;
+ _Box[13,1,1]:=1; {....}
+ _Box[13,1,2]:=3; {x...}
+ _Box[13,2,1]:=3; {xxx.}
+ _Box[13,2,2]:=3; {....}
+ _Box[13,3,1]:=2;
+ _Box[13,3,2]:=3;
+ _Box[13,4,1]:=1;
+ _Box[13,4,2]:=2;
  
- box[14,1,1]:=2; {....}
- box[14,1,2]:=2; {.x..}
- box[14,2,1]:=2; {.x..}
- box[14,2,2]:=3; {xx..}
- box[14,3,1]:=2;
- box[14,3,2]:=4;
- box[14,4,1]:=1;
- box[14,4,2]:=4;
+ _Box[14,1,1]:=2; {....}
+ _Box[14,1,2]:=2; {.x..}
+ _Box[14,2,1]:=2; {.x..}
+ _Box[14,2,2]:=3; {xx..}
+ _Box[14,3,1]:=2;
+ _Box[14,3,2]:=4;
+ _Box[14,4,1]:=1;
+ _Box[14,4,2]:=4;
  
- box[15,1,1]:=2; {....}
- box[15,1,2]:=2; {xxx.}
- box[15,2,1]:=3; {..x.}
- box[15,2,2]:=2; {....}
- box[15,3,1]:=3;
- box[15,3,2]:=3;
- box[15,4,1]:=1;
- box[15,4,2]:=2;
+ _Box[15,1,1]:=2; {....}
+ _Box[15,1,2]:=2; {xxx.}
+ _Box[15,2,1]:=3; {..x.}
+ _Box[15,2,2]:=2; {....}
+ _Box[15,3,1]:=3;
+ _Box[15,3,2]:=3;
+ _Box[15,4,1]:=1;
+ _Box[15,4,2]:=2;
  
- box[16,1,1]:=1; {....}
- box[16,1,2]:=2; {xx..}
- box[16,2,1]:=2; {.x..}
- box[16,2,2]:=2; {.x..}
- box[16,3,1]:=2;
- box[16,3,2]:=3;
- box[16,4,1]:=2;
- box[16,4,2]:=4;
+ _Box[16,1,1]:=1; {....}
+ _Box[16,1,2]:=2; {xx..}
+ _Box[16,2,1]:=2; {.x..}
+ _Box[16,2,2]:=2; {.x..}
+ _Box[16,3,1]:=2;
+ _Box[16,3,2]:=3;
+ _Box[16,4,1]:=2;
+ _Box[16,4,2]:=4;
  
- box[17,1,1]:=1; {....}
- box[17,1,2]:=2; {xxx.}
- box[17,2,1]:=2; {x...}
- box[17,2,2]:=2; {....}
- box[17,3,1]:=3;
- box[17,3,2]:=2;
- box[17,4,1]:=1;
- box[17,4,2]:=3;
+ _Box[17,1,1]:=1; {....}
+ _Box[17,1,2]:=2; {xxx.}
+ _Box[17,2,1]:=2; {x...}
+ _Box[17,2,2]:=2; {....}
+ _Box[17,3,1]:=3;
+ _Box[17,3,2]:=2;
+ _Box[17,4,1]:=1;
+ _Box[17,4,2]:=3;
  
- box[18,1,1]:=2; {....}
- box[18,1,2]:=3; {.x..}
- box[18,2,1]:=2; {.x..}
- box[18,2,2]:=2; {.xx.}
- box[18,3,1]:=2;
- box[18,3,2]:=4;
- box[18,4,1]:=3;
- box[18,4,2]:=4;
+ _Box[18,1,1]:=2; {....}
+ _Box[18,1,2]:=3; {.x..}
+ _Box[18,2,1]:=2; {.x..}
+ _Box[18,2,2]:=2; {.xx.}
+ _Box[18,3,1]:=2;
+ _Box[18,3,2]:=4;
+ _Box[18,4,1]:=3;
+ _Box[18,4,2]:=4;
  
- box[19,1,1]:=2; {....}
- box[19,1,2]:=3; {..x.}
- box[19,2,1]:=1; {xxx.}
- box[19,2,2]:=3; {....}
- box[19,3,1]:=3;
- box[19,3,2]:=3;
- box[19,4,1]:=3;
- box[19,4,2]:=2;
-end;{savefigures}
+ _Box[19,1,1]:=2; {....}
+ _Box[19,1,2]:=3; {..x.}
+ _Box[19,2,1]:=1; {xxx.}
+ _Box[19,2,2]:=3; {....}
+ _Box[19,3,1]:=3;
+ _Box[19,3,2]:=3;
+ _Box[19,4,1]:=3;
+ _Box[19,4,2]:=2;
+end;{SaveFigures}
 
 {====================================================}
 
-procedure pausepicture (ticks:longint);
+procedure PausePicture (ticks:longint);
 begin
- if ticks>65500 
+ if ticks>MAX_DELAY
   then begin
-   for i:=1 to (ticks div 65500) do 
-    delay(65500);
-   delay(ticks mod 65500);
+   for i:=1 to (ticks div MAX_DELAY) do 
+    delay(MAX_DELAY);
+   delay(ticks mod MAX_DELAY);
   end
   else delay(ticks);
 end;
 
-procedure timing;
+procedure Timing;
 var 
- ticks:longint; {quantity of timer ticks in 5 secs of delay}
+ ticks:longint; {quantity of Timer ticks in 5 secs of delay}
  delays:longint; {quantity of delay in 5 secs of real time}
- stimer:longint absolute $0040:$006C;
+ timer:longint absolute $0040:$006C;
 begin
  writeln;
  writeln(' Correcting delay will take about 5 seconds, please wait.');
- ticks:=stimer;
+ ticks:=timer;
  delays:=0;
- while stimer<=(ticks+46) do 
+ while timer<=(ticks+46) do 
  begin
   delay(1);
   inc(delays); 
  end;
- ticks:=stimer;
- pausepicture(delays);
- ticks:=stimer-ticks; 
+ ticks:=timer;
+ PausePicture(delays);
+ ticks:=timer-ticks; 
  while (keypressed) do 
   readkey;
- writeln(' 1 sec of runtime = delay(',round(delays/(ticks*55)*1000)+1,')');
+ writeln(' 1 sec of runTime = delay(',round(delays/(ticks*55)*1000)+1,')');
  writeln(' Press any key to continue.');
- time:=round(delays/(ticks*55));
- if ((time mod 1)>4) or (time<1) 
-  then inc(time);
+ _Time:=round(delays/(ticks*55));
+ if ((_Time mod 1)>4) or (_Time<1) 
+  then inc(_Time);
  readkey;
  clrscr;
  while (keypressed) do 
   readkey;
-end;{timing}
+end;{Timing}
 
-procedure fieldbar(x1,y1,x2,y2:integer);
+procedure SetDefaultTextStyle;
+begin
+ settextstyle(DefaultFont,HOR_TEXT,MEDIUM_TEXT);
+end;{SetDefaultTextStyle}
+
+procedure SetDefaultFillStyle;
+begin
+ setfillstyle(SolidFill,LightGray);
+end;{SetDefaultFillStyle}
+
+procedure SetDefaultColor;
+begin
+ setcolor(Black);
+end;{SetDefaultColor}
+
+procedure SetDefaultLineStyle;
+begin
+ setlinestyle(SolidLn,STANDARD_LINE,NormWidth);
+end;{SetDefaultLineStyle}
+
+procedure BarOnField(x1,y1,x2,y2:integer);
 begin
  bar(LEFTX+x1,TOPY+y1,LEFTX+x2,TOPY+y2);
-end;{fieldbar}
+end;{BarOnField}
 
-procedure menubar(x1,y1,x2,y2:integer);
+procedure BarOnMenu(x1,y1,x2,y2:integer);
 begin
  bar(XM+x1,TOPY+y1,XM+x2,TOPY+y2);
-end;{menubar}
+end;{BarOnMenu}
 
-procedure eraser(px,py,x0,y0:integer);
+procedure Eraser(xi,yi,x0,y0:integer);
 var
  x,y:integer;
 begin
- x:=x0+px*PIXELSIZE;
- y:=y0+py*PIXELSIZE;
- setfillstyle(1,7);
+ x:=x0+xi*PIXEL_SIZE;
+ y:=y0+yi*PIXEL_SIZE;
  bar(x,y,x+7,y+7);
-end;{eraser}
+end;{Eraser}
 
-procedure savepixel;
+procedure SavePixel;
 begin
- setlinestyle(0,0,1);
- setcolor(0);
  moveto(1,1);
  linerel(0,7);
  linerel(7,0);
  linerel(0,-7);
  linerel(-7,0);
 
- setfillstyle(1,0);
+ setfillstyle(SolidFill,Black);
  bar(3,3,6,6);
+ SetDefaultFillStyle;
+ 
+ _PixSize:=imagesize(1,1,PIXEL_SIZE-1,PIXEL_SIZE-1);
+ getmem(_Pix,_PixSize);
+ getimage(1,1,PIXEL_SIZE-1,PIXEL_SIZE-1,_Pix^);
+ Eraser(0,0,1,1);
+end;{SavePixel}
 
- spix:=imagesize(1,1,PIXELSIZE-1,PIXELSIZE-1);
- getmem(pix,spix);
- getimage(1,1,PIXELSIZE-1,PIXELSIZE-1,pix^);
- eraser(0,0,1,1);
-end;{savepixel}
-
-procedure playground;
+procedure PlayGround;
 begin
- setlinestyle(0,0,1);
- setcolor(0);
-
- moveto((getmaxx-94) div 2,70); {roof}
+ moveto((getmaxx-94) div 2, 70); {roof}
  linerel(94,0);
 
  moverel(0,3); {right}
@@ -310,815 +335,815 @@ begin
 
  moverel(0,-3); {left}
  linerel(0,-178);
-end;{playground}
+end;{PlayGround}
 
-procedure writeonfield(x,y:integer;w:string);
+procedure WriteOnField(x,y:integer;s:string);
 begin
- outtextxy(LEFTX+x,TOPY+y,w);
-end;{writeonfield}
+ outtextxy(LEFTX+x,TOPY+y,s);
+end;{WriteOnField}
 
-procedure writeonmenu(x,y:integer;w:string);
+procedure WriteOnMenu(x,y:integer;s:string);
 begin
- outtextxy(XM+x,TOPY+y,w);
-end;{writeonmenu}
+ outtextxy(XM+x,TOPY+y,s);
+end;{WriteOnMenu}
 
-procedure menu;
+procedure Menu;
 begin
- settextstyle(0,0,3);
- writeonfield(-25,-50,'Tetris');
- settextstyle(0,0,1);
+ settextstyle(DefaultFont,HOR_TEXT,BIG_TEXT);
+ WriteOnField(-25,-50,'Tetris');
+ settextstyle(DefaultFont,HOR_TEXT,SMALL_TEXT);
 
- writeonmenu(0,45,'Lines:');
- writeonmenu(0,60,'Score:');
- writeonmenu(0,157,'Level:');
- writeonmenu(0,172,'Speed:');
+ WriteOnMenu(0,45,'Lines:');
+ WriteOnMenu(0,60,'Score:');
+ WriteOnMenu(0,157,'Level:');
+ WriteOnMenu(0,172,'Speed:');
 
- setcolor(8);
- writeonfield(-200,55,'Pause:');
- writeonfield(-200,75,'Exit:');
- writeonfield(-200,95,'Rotate:');
- writeonfield(-200,115,'Faster:');
- writeonfield(-200,135,'Left:');
- writeonfield(-200,155,'Right:');
- writeonfield(-200,175,'Fall:');
+ setcolor(DarkGray);
+ WriteOnField(-200,55,'Pause:');
+ WriteOnField(-200,75,'Exit:');
+ WriteOnField(-200,95,'Rotate:');
+ WriteOnField(-200,115,'Faster:');
+ WriteOnField(-200,135,'Left:');
+ WriteOnField(-200,155,'Right:');
+ WriteOnField(-200,175,'Fall:');
 
- writeonfield(-130,55,'Enter');
- writeonfield(-130,75,'Escape');
- writeonfield(-130,95,'num 8');
- writeonfield(-130,115,'num 5');
- writeonfield(-130,135,'num 4');
- writeonfield(-130,155,'num 6');
- writeonfield(-130,175,'num 0');
+ WriteOnField(-130,55,'Enter');
+ WriteOnField(-130,75,'Escape');
+ WriteOnField(-130,95,'num 8');
+ WriteOnField(-130,115,'num 5');
+ WriteOnField(-130,135,'num 4');
+ WriteOnField(-130,155,'num 6');
+ WriteOnField(-130,175,'num 0');
 
- writeonfield(-70,95,'W');
- writeonfield(-70,115,'S');
- writeonfield(-70,135,'A');
- writeonfield(-70,155,'D');
- writeonfield(-70,175,'Space');
+ WriteOnField(-70,95,'W');
+ WriteOnField(-70,115,'S');
+ WriteOnField(-70,135,'A');
+ WriteOnField(-70,155,'D');
+ WriteOnField(-70,175,'Space');
 
- writeonfield(-50,95,chr(24)); {arrow up}
- writeonfield(-50,115,chr(25)); {arrow down}
- writeonfield(-50,135,chr(27)); {arrow left}
- writeonfield(-50,155,chr(26)); {arrow right}
+ WriteOnField(-50,95,chr(24)); {arrow up}
+ WriteOnField(-50,115,chr(25)); {arrow down}
+ WriteOnField(-50,135,chr(27)); {arrow left}
+ WriteOnField(-50,155,chr(26)); {arrow right}
 
  outtextxy(getmaxx-115,getmaxy-15,'Homeniuk Nina');
- setcolor(0);
-end;{menu}
+ SetDefaultColor;
+ SetDefaultTextStyle;
+end;{Menu}
 
 {====================================================}
 
-procedure pixel (px,py,x0:integer);
+procedure Pixel (x,y,x0:integer);
 begin
- putimage(x0+px*PIXELSIZE,TOPY+py*PIXELSIZE,pix^,0);
-end;{pixel}
+ putimage(x0+x*PIXEL_SIZE,TOPY+y*PIXEL_SIZE,_Pix^,0);
+end;{Pixel}
 
-procedure newfig(f0,xi,yi,x0:integer);
+procedure NewFig(figure,xi,yi,x0:integer);
 var 
  x,y:integer;
 begin
- for i:=1 to FIGSIZE do
-  for j:=1 to FIGSIZE do
-   fbox[i,j]:=false; 
- for i:=1 to FIGSIZE do 
+ for i:=1 to FIG_SIZE do
+  for j:=1 to FIG_SIZE do
+   _FigBox[i,j]:=false; 
+ for i:=1 to FIG_SIZE do 
  begin
-  x:=box[f0,i,1];
-  y:=box[f0,i,2];
-  fbox[x,y]:=true;
-   pixel(xi+x-1,yi+y-1,x0);
+  x:=_Box[figure,i,1];
+  y:=_Box[figure,i,2];
+  _FigBox[x,y]:=true;
+  Pixel(xi+x-1,yi+y-1,x0);
  end;
-end;{newfig}
+end;{NewFig}
 
-procedure newfigure;
+procedure NewFigure;
 begin
- newfig(f,xnow,ynow,LEFTX);
-end;{newfigure}
+ NewFig(_FigureNow,_Xnow,_Ynow,LEFTX);
+end;{NewFigure}
 
-procedure newfnext;
+procedure NewFigNext;
 begin
- newfig(fnext,0,0,XM);
-end;{newfnext}
+ NewFig(_FigNext,0,0,XM);
+end;{NewFigNext}
 
-procedure delfig(f0,xi,yi,x0:integer);
+procedure DelFig(figure,xi,yi,x0:integer);
 var 
  x,y:integer;
 begin
- for i:=1 to FIGSIZE do
+ for i:=1 to FIG_SIZE do
  begin
-  x:=box[f0,i,1];
-  y:=box[f0,i,2];
-  eraser(xi+x-1,yi+y-1,x0,TOPY);
+  x:=_Box[figure,i,1];
+  y:=_Box[figure,i,2];
+  Eraser(xi+x-1,yi+y-1,x0,TOPY);
  end;
-end;{delfig}
+end;{DelFig}
 
-procedure delfigure;
+procedure DelFigure;
 begin
- delfig(f,xnow,ynow,LEFTX);
-end;{delfigure}
+ DelFig(_FigureNow,_Xnow,_Ynow,LEFTX);
+end;{DelFigure}
 
-procedure delfnext;
+procedure DelFigNext;
 begin
- delfig(fnext,0,0,XM);
-end;{delfnext}
+ DelFig(_FigNext,0,0,XM);
+end;{DelFigNext}
 
-procedure fullrow(y0:integer);
+procedure FullRow(y0:integer);
 begin
- for i:=0 to FIELDWIDTH-1 do
-  pixel(i,y0,LEFTX);
-end;{fullrow}
+ for i:=0 to FIELD_WIDTH-1 do
+  Pixel(i,y0,LEFTX);
+end;{FullRow}
 
-procedure delrow(y0:integer);
+procedure DelRow(y0:integer);
 begin
- for i:=0 to FIELDWIDTH-1 do
-  eraser(i,y0,LEFTX,TOPY);
-end;{delrow}
+ for i:=0 to FIELD_WIDTH-1 do
+  Eraser(i,y0,LEFTX,TOPY);
+end;{DelRow}
 
-function checkfall: boolean;
+function CheckFall: boolean;
 var
- fboxv:integer; 
- bv:boolean;
- u,v:integer;
+ figLinesSum:integer; 
+ canFall:boolean;
+ x,y:integer;
 begin
- bv:=true;
- for i:=1 to FIGSIZE do 
+ canFall:=true;
+ for i:=1 to FIG_SIZE do 
  begin
-  fboxv:=0;
-  for j:=1 to FIGSIZE do
-   if fbox[i,j]
-    then fboxv:=j;
-  if (fboxv<>0) 
+  figLinesSum:=0;
+  for j:=1 to FIG_SIZE do
+   if _FigBox[i,j]
+    then figLinesSum:=j;
+  if (figLinesSum<>0) 
    then begin
-    u:=xnow+i;
-    v:=ynow+fboxv+1;
-    bv:=bv and not s[u,v] and (v<=FIELDHEIGHT);
+    x:=_Xnow+i;
+    y:=_Ynow+figLinesSum+1;
+    canFall:=canFall
+     and not _MainField[x,y]
+	 and (y<=FIELD_HEIGHT);
    end;
  end;
- checkfall:=bv;
-end;{checkfall}
+ CheckFall:=canFall;
+end;{CheckFall}
 
-function checkleft: boolean;
+function CheckLeft: boolean;
 var
- fboxv:integer; 
- bv:boolean;
- u,v:integer;
+ figColsSum:integer; 
+ canGoLeft:boolean;
+ x,y:integer;
 begin
- bv:=true;
- for j:=1 to FIGSIZE do 
+ canGoLeft:=true;
+ for j:=1 to FIG_SIZE do 
  begin
-  fboxv:=0;
-  for i:=FIGSIZE downto 1 do
-   if fbox[i,j]
-    then fboxv:=i;
-  if (fboxv<>0) 
+  figColsSum:=0;
+  for i:=FIG_SIZE downto 1 do
+   if _FigBox[i,j]
+    then figColsSum:=i;
+  if (figColsSum<>0) 
    then begin
-    v:=ynow+j;
-    u:=xnow+fboxv-1;
-    bv:=bv and not s[u,v] and (u>0);
+    x:=_Xnow+figColsSum-1;
+	y:=_Ynow+j;
+    canGoLeft:=canGoLeft 
+	 and not _MainField[x,y]
+	 and (x>0);
    end;
  end;
- checkleft:=bv;
-end;{checkleft}
+ CheckLeft:=canGoLeft;
+end;{CheckLeft}
 
-function checkright: boolean;
+function CheckRight: boolean;
 var
- fboxv:integer; 
- bv:boolean;
- u,v:integer;
+ figColsSum:integer; 
+ canGoRight:boolean;
+ x,y:integer;
 begin
- bv:=true;
- for j:=1 to FIGSIZE do 
+ canGoRight:=true;
+ for j:=1 to FIG_SIZE do 
  begin
-  fboxv:=0;
-  for i:=1 to FIGSIZE do
-   if fbox[i,j]
-    then fboxv:=i;
-  if (fboxv<>0) 
+  figColsSum:=0;
+  for i:=1 to FIG_SIZE do
+   if _FigBox[i,j]
+    then figColsSum:=i;
+  if (figColsSum<>0) 
    then begin
-    v:=ynow+j;
-    u:=xnow+fboxv+1;
-    bv:=bv and not s[u,v] and (u<=FIELDWIDTH);
+    x:=_Xnow+figColsSum+1;
+    y:=_Ynow+j;
+    canGoRight:=canGoRight 
+	 and not _MainField[x,y] 
+	 and (x<=FIELD_WIDTH);
    end;
  end;
- checkright:=bv;
-end;{checkright}
+ CheckRight:=canGoRight;
+end;{CheckRight}
 
-procedure moveright;
+procedure MoveRight;
 begin
- if checkright 
+ if CheckRight 
   then begin
-   delfigure;
-   inc(xnow);
-   newfigure;
+   DelFigure;
+   inc(_Xnow);
+   NewFigure;
   end;
-end; {moveright}
+end; {MoveRight}
 
-procedure moveleft;
+procedure MoveLeft;
 begin
- if checkleft 
+ if CheckLeft 
   then begin
-   delfigure;
-   dec(xnow);
-   newfigure;
+   DelFigure;
+   dec(_Xnow);
+   NewFigure;
   end;
-end;{moveleft}
+end;{MoveLeft}
 
-procedure movedown;
+procedure MoveDown;
 begin
- if checkfall 
+ if CheckFall 
   then begin
-   delfigure;
-   inc(ynow);
-   newfigure;
+   DelFigure;
+   inc(_Ynow);
+   NewFigure;
   end;
-end;{movedown}
+end;{MoveDown}
 
-procedure checkrot(a,b:integer);
+function CheckRot(xi,yi:integer): boolean;
 var 
- u,v:integer;
+ x,y:integer;
 begin
- u:=xnow+a;
- v:=ynow+b;
- case u of
-  0:begin
-   moveright;
-   u:=xnow+a;
-  end;
-  11:begin
-   moveleft;
-   if f=3 
-    then moveleft;
-   u:=xnow+a;
+ x:=_Xnow+xi;
+ case x of
+  0: MoveRight;
+  11: begin
+   MoveLeft;
+   if _FigureNow=3 
+    then MoveLeft;
   end;
  end;
- if (v=0) 
-  then begin
-   movedown;
-   v:=ynow+b;
-  end;
- 
- rot:=rot and not s[u,v] 
-  and (u>0) and (u<=FIELDWIDTH) and (v>0) and (v<=FIELDHEIGHT);
-end;{checkrot}
+ if (y=0) 
+  then MoveDown;
+ x:=_Xnow+xi;
+ y:=_Ynow+yi; 
+ CheckRot:= not _MainField[x,y] 
+   and (x>0) and (x<=FIELD_WIDTH) 
+   and (y>0) and (y<=FIELD_HEIGHT);
+end;{CheckRot}
 
-function checkrotate(newf:integer): boolean;
+function CheckRotate(newFig:integer): boolean;
 var
- newbox:array[1..FIGSIZE,1..FIGSIZE]of boolean;
+ newBox:array[1..FIG_SIZE,1..FIG_SIZE]of boolean;
+ canRotate:boolean;
 begin
- if(newf=f)
-  then rot:=false
+ if(newFig=_FigureNow)
+  then canRotate:=false
   else begin
-   rot:=true;
-   for i:=1 to FIGSIZE do 
-    newbox[box[newf,i,1],box[newf,i,2]]:=true;
-   for i:=1 to FIGSIZE do
-    for j:=1 to FIGSIZE do
-     if not fbox[i,j] and newbox[i,j]
-      then checkrot(i,j);
+   canRotate:=true;
+   for i:=1 to FIG_SIZE do
+    for j:=1 to FIG_SIZE do 
+	 newBox[i,j]:=false;
+   for i:=1 to FIG_SIZE do 
+    newBox[_Box[newFig,i,1],_Box[newFig,i,2]]:=true;
+   for i:=1 to FIG_SIZE do
+    for j:=1 to FIG_SIZE do 
+     if not _FigBox[i,j] and newBox[i,j]
+      then canRotate:=canRotate and CheckRot(i,j);
   end;
- checkrotate:=rot;
-end;{checkrotate}
+ SetDefaultTextStyle;
+ CheckRotate:=canRotate;
+end;{CheckRotate}
 
-procedure rotate;
+procedure Rotate;
 var 
- newf:integer;
+ newFig:integer;
 begin
- case f of
-  1: newf:=f;
-  3,5,7: newf:=f-1;
-  11: newf:=8;
-  15: newf:=12;
-  19: newf:=16;
-  else newf:=f+1;
+ case _FigureNow of
+  1: newFig:=_FigureNow;
+  3,5,7: newFig:=_FigureNow-1;
+  11: newFig:=8;
+  15: newFig:=12;
+  19: newFig:=16;
+  else newFig:=_FigureNow+1;
  end;
- if checkrotate(newf)
+ if CheckRotate(newFig)
   then begin
-   delfigure;
-   f:=newf;
-   newfigure;
+   DelFigure;
+   _FigureNow:=newFig;
+   NewFigure;
   end;
-end;{rotate}
+end;{Rotate}
 
-procedure crash;
+procedure Crash;
 begin
- delfigure;
- while checkfall do
-  inc(ynow);
- newfigure;
-end;{crash}
+ DelFigure;
+ while CheckFall do
+  inc(_Ynow);
+ NewFigure;
+end;{Crash}
 
-procedure pause;
+procedure BlackPixel(x,y:integer);
 begin
- setcolor(8);
- settextstyle(0,0,2);
- writeonmenu(0,80,'Pause');
- settextstyle(0,0,1);
- setfillstyle(1,8);
+ putpixel(XM+x,TOPY+y,Black);
+end;
+
+procedure Pause;
+begin
+ setcolor(DarkGray);
+ WriteOnMenu(0,80,'Pause');
+ setfillstyle(SolidFill,DarkGray);
  pieslice(XM+30,TOPY+120,180,360,20);
- menubar(10,115,50,120);
- menubar(5,140,55,144);
- setlinestyle(0,0,3);
+ BarOnMenu(10,115,50,120);
+ BarOnMenu(5,140,55,144);
+ setlinestyle(SolidLn,STANDARD_LINE,ThickWidth);
  circle(XM+54,TOPY+125,7);
- setlinestyle(0,0,1);
- setfillstyle(1,7);
- setcolor(0);
+ SetDefaultLineStyle;
+ SetDefaultFillStyle;
+ SetDefaultColor;
 
  for i:=2 to 4 do begin
-  putpixel(XM+i*10,TOPY+110,0);
-  putpixel(XM+i*10,TOPY+109,0);
-  putpixel(XM+i*10,TOPY+108,0);
-  putpixel(XM+i*10+1,TOPY+107,0);
-  putpixel(XM+i*10+2,TOPY+106,0);
-  putpixel(XM+i*10+2,TOPY+105,0);
-  putpixel(XM+i*10+2,TOPY+104,0);
-  putpixel(XM+i*10+1,TOPY+103,0);
-  putpixel(XM+i*10,TOPY+102,0);
-  putpixel(XM+i*10,TOPY+101,0);
+  BlackPixel(i*10,110);
+  BlackPixel(i*10,109);
+  BlackPixel(i*10,108);
+  BlackPixel(i*10+1,107);
+  BlackPixel(i*10+2,106);
+  BlackPixel(i*10+2,105);
+  BlackPixel(i*10+2,104);
+  BlackPixel(i*10+1,103);
+  BlackPixel(i*10,102);
+  BlackPixel(i*10,101);
  end;
-end;{pause}
+end;{Pause}
 
-function speeddelay:integer;
+function SpeedDelay:integer;
 begin
- speeddelay:=630-(speed-1)*480 div (MAXSPEED-1);
-end;{speeddelay}
+ SpeedDelay:=630-(_Speed-1)*480 div (MAX_SPEED-1);
+end;{SpeedDelay}
 
-procedure fall;
+procedure FallControl;
 var 
- n:real;
- down:boolean;
+ delays:real;
+ isDown:boolean;
 begin
- down:=true;
- while down do
+ isDown:=true;
+ while isDown do
  begin
-  if not checkfall 
-   then down:=false;
-  n:=0;
+  if not CheckFall 
+   then isDown:=false;
+  delays:=0;
   repeat
-   delay(time);
-   n:=n+1;
+   delay(_Time);
+   delays:=delays+1;
    if keypressed 
     then case readkey of			{866 symbol table (ASCII, OEM, DOS)}
       #27: begin 					{ESC}
-       finish:=true; 
+       _IsFinish:=true; 
        exit;
       end;
       #13: begin					{Enter}
-       pause;
+       Pause;
        if readkey=#27 				{ESC}
         then begin
-         finish:=true; 
+         _IsFinish:=true; 
          exit;
         end
         else begin 
-         setfillstyle(1,7);
-         menubar(-3,70,100,155); 
+         BarOnMenu(-3,70,100,155); 
         end;
       end;
       #48,#32: begin				{num0,Space}
-       crash;
+       Crash;
        exit;
       end;
       #56,#87,#119,#150,#230: begin {num8,W,w,Ц,ц}
-       rotate;
-       down:=true;
+       Rotate;
+       isDown:=true;
       end;
       #54,#68,#100,#130,#162: begin	{num6,D,d,В,в}
-       moveright;
-       down:=true;
+       MoveRight;
+       isDown:=true;
       end;
       #52,#65,#97,#148,#228: begin	{num4,A,a,Ф,ф}
-       moveleft;
-       down:=true;
+       MoveLeft;
+       isDown:=true;
       end;
       #53,#83,#115,#155,#235:		{num2,S,s,І,і}
-       n:=speeddelay;
+       delays:=SpeedDelay;
       #0: case readkey of
-        #72: begin 					{Up}
-         rotate;
-         down:=true;
+        #72: begin 					{arrow up}
+         Rotate;
+         isDown:=true;
         end;
-        #77: begin 					{Right}
-         moveright;
-         down:=true;
+        #77: begin 					{arrow right}
+         MoveRight;
+         isDown:=true;
         end;
-        #75:begin 					{Left}
-         moveleft;
-         down:=true;
+        #75: begin 					{arrow left}
+         MoveLeft;
+         isDown:=true;
         end;
-        #80: 						{Down}
-         n:=speeddelay;
+        #80: 						{arrow down}
+         delays:=SpeedDelay;
       end;
     end;
-  until n>(speeddelay-5);
-  movedown;
+  until delays>(SpeedDelay-5);
+  MoveDown;
  end;{while}
-end;{fall}
+end;{FallControl}
 
-procedure delete;
+procedure Delete;
 var 
- z,h:integer;
- k:array[1..FIGSIZE] of integer; {full rows to be deleted}
+ index,loweredLine:integer;
+ fullRows:array[1..FIG_SIZE] of integer; {full rows to be deleted}
 begin
- for j:=1 to FIGSIZE do
-  k[j]:=0;
+ for j:=1 to FIG_SIZE do
+  fullRows[j]:=0;
  j:=0;
- q:=p; {lowest added square}
-
+ 
  {remember indexes of full rows in array K}
  repeat
-  if (sv[q]=FIELDWIDTH) 
+  if (_LinesSum[_Point]=FIELD_WIDTH) 
    then begin
     inc(j);
-    k[j]:=q; 
+    fullRows[j]:=_Point; 
    end;
-  dec(q);
- until (sv[q]=0); {q - first non zero line, go bottom up}
+  dec(_Point);
+ until (_LinesSum[_Point]=0); {q - first non zero line, go bottom up}
 
  if (j>0) 
   then begin {there are full rows}
 
    {increment points and lines}
-   setfillstyle(1,7);
-   settextstyle(0,0,1);
+   _OneSpeedLines:=_OneSpeedLines+j;
+   _TotalLines:=_TotalLines+j;
+   BarOnMenu(49,44,100,54);
+   str(_TotalLines,_Output);
+   settextstyle(DefaultFont,HOR_TEXT,SMALL_TEXT);
+   WriteOnMenu(50,45,_Output);{rows}
 
-   lines:=lines+j;
-   alines:=alines+j;
-   menubar(49,44,100,54);
-   str(alines,a);
-   writeonmenu(50,45,a);{rows}
-
-   score:=score+50+j*50; 
-   menubar(49,59,100,69);
-   str(score,a);
-   writeonmenu(50,60,a);{scores}
+   _Score:=_Score+50+j*50; 
+   BarOnMenu(49,59,100,69);
+   str(_Score,_Output);
+   WriteOnMenu(50,60,_Output);{scores}
+   SetDefaultTextStyle;
 
    {blink with full rows}
-   delay(time*250);
-   for z:=1 to j do 
-    delrow(k[z]-1);
-   delay(time*250);
-   for z:=1 to j do 
-    fullrow(k[z]-1);
-   delay(time*250);
-   for z:=1 to j do 
+   delay(_Time*250);
+   for index:=1 to j do 
+    DelRow(fullRows[index]-1);
+   delay(_Time*250);
+   for index:=1 to j do 
+    FullRow(fullRows[index]-1);
+   delay(_Time*250);
+   for index:=1 to j do 
    begin
-    delrow(k[z]-1);
-    sv[k[z]]:=0;
+    DelRow(fullRows[index]-1);
+    _LinesSum[fullRows[index]]:=0;
    end;
-   delay(time*250);
+   delay(_Time*250);
    
    {_move down what's left_}
    {save all visible to matrix W and arase}
-   h:=0; {number of remaining lines}
-   for z:=(q+1) to (k[1]) do  {top to bottom}
+   loweredLine:=0; {number of remaining lines}
+   for index:=(_Point+1) to (fullRows[1]) do  {top to bottom}
    begin
-    if (sv[z]=0) 
+    if (_LinesSum[index]=0) 
      then begin
-      for j:=1 to FIELDWIDTH do
-       s[j,z]:=false;
+      for j:=1 to FIELD_WIDTH do
+       _MainField[j,index]:=false;
       continue;
      end
      else begin
-      inc(h);
-      for j:=1 to FIELDWIDTH do 
+      inc(loweredLine);
+      for j:=1 to FIELD_WIDTH do 
       begin
-       w[j,h]:=s[j,z];
-       s[j,z]:=false;
+       _MainFieldCopy[j,loweredLine]:=_MainField[j,index];
+       _MainField[j,index]:=false;
       end;
-      sv[z]:=0;
-      delrow(z-1);
+      _LinesSum[index]:=0;
+      DelRow(index-1);
      end;
    end;
 
    {draw lowered lines}
-   for i:=1 to h do 
+   for i:=1 to loweredLine do 
    begin
-    z:=k[1]-h+i;
-    for j:=1 to FIELDWIDTH do 
+    index:=fullRows[1]-loweredLine+i;
+    for j:=1 to FIELD_WIDTH do 
     begin
-     s[j,z]:=w[j,i];
-     if s[j,z] 
+     _MainField[j,index]:=_MainFieldCopy[j,i];
+     if _MainField[j,index] 
       then begin
-       pixel(j-1,z-1,LEFTX);
-       sv[z]:=sv[z]+1;
+       Pixel(j-1,index-1,LEFTX);
+       _LinesSum[index]:=_LinesSum[index]+1;
       end;
     end;
    end;
 
  end;{there are full rows}
-end;{delete}
+end;{Delete}
 
 {====================================================}
 
-procedure hello;
+procedure Hello;
  begin
- settextstyle(0,0,2);
- writeonfield(0,70,'Ready?');
- writeonfield(25,105,'Go!');
+ WriteOnField(0,70,'Ready?');
+ WriteOnField(25,105,'Go!');
  readkey;
- setfillstyle(1,7);
- fieldbar(0,49,90,130);
-end;{hello}
+ BarOnField(0,49,90,130);
+end;{Hello}
 
-procedure finishspeed;
+procedure FinishSpeed;
 begin
- for j:=q-1 to FIELDHEIGHT do 
+ for j:=_Point-1 to FIELD_HEIGHT do 
  begin
-  delrow(j-1);
-  sv[j]:=0;
+  DelRow(j-1);
+  _LinesSum[j]:=0;
  end;
- inc(speed);
- setfillstyle(1,7);
- settextstyle(0,0,1);
- str(speed,a);
- if speed<=MAXSPEED 
+ inc(_Speed);
+ str(_Speed,_Output);
+ if _Speed<=MAX_SPEED 
   then begin
-   menubar(49,171,100,181);
-   writeonmenu(50,172,a);{speed}
+   BarOnMenu(49,171,100,181);
+   settextstyle(DefaultFont,HOR_TEXT,SMALL_TEXT);
+   WriteOnMenu(50,172,_Output);{_Speed}
+   SetDefaultTextStyle;
   end;
-end;{finishspeed}
+end;{FinishSpeed}
 
-procedure win;
+procedure Win;
 begin
- settextstyle(0,0,2);
- writeonfield(18,50,'Win!');
- writeonfield(0,80,'Speed+');
- writeonfield(23,110,':-)');
- pausepicture(time*1500);
- setfillstyle(1,7);
- fieldbar(0,49,90,130);
-end;{win}
+ WriteOnField(18,50,'Win!');
+ WriteOnField(0,80,'Speed+');
+ WriteOnField(23,110,':-)');
+ PausePicture(_Time*1500);
+ BarOnField(0,49,90,130);
+end;{Win}
 
-procedure winlevel;
+procedure WinLevel;
 begin
- settextstyle(0,0,2);
- writeonfield(18,50,'Win!');
- writeonfield(6,80,'Level');
- writeonfield(0,110,'up :-)');
- pausepicture(time*1500);
- setfillstyle(1,7);
- fieldbar(0,49,90,130);
-end;{winlevel}
+ WriteOnField(18,50,'Win!');
+ WriteOnField(6,80,'Level');
+ WriteOnField(0,110,'up :-)');
+ PausePicture(_Time*1500);
+ BarOnField(0,49,90,130);
+end;{WinLevel}
 
-procedure again;
+procedure Again;
 begin
- settextstyle(0,0,2);
- writeonfield(20,50,'Try');
- writeonfield(5,80,'again');
- writeonfield(23,110,':-)');
- settextstyle(0,0,1);
+ WriteOnField(20,50,'Try');
+ WriteOnField(5,80,'again');
+ WriteOnField(23,110,':-)');
  readkey;
- setfillstyle(1,7);
- fieldbar(4,49,82,130);
- menubar(49,171,100,181);
- menubar(49,156,100,166);
-end;{again}
+ BarOnField(4,49,82,130);
+ BarOnMenu(49,171,100,181);
+ BarOnMenu(49,156,100,166);
+end;{Again}
 
-procedure looser;
+procedure Looser;
 begin
- for j:=FIELDHEIGHT downto 1 do 
+ for j:=FIELD_HEIGHT downto 1 do 
  begin 
   if (j mod 2 = 0) 
    then 
-    for i:=FIELDWIDTH-1 downto 0 do 
+    for i:=FIELD_WIDTH-1 downto 0 do 
     begin
-     pixel(i,j-1,LEFTX);
-     delay(time*20);
+     Pixel(i,j-1,LEFTX);
+     delay(_Time*20);
     end
    else
-    for i:=0 to FIELDWIDTH-1 do 
+    for i:=0 to FIELD_WIDTH-1 do 
     begin 
-     pixel(i,j-1,LEFTX);
-     delay(time*20);
+     Pixel(i,j-1,LEFTX);
+     delay(_Time*20);
     end;
  end;
- for j:=1 to FIELDHEIGHT do 
-  delrow(j-1);
-end;{looser}
+ for j:=1 to FIELD_HEIGHT do 
+  DelRow(j-1);
+end;{Looser}
 
-procedure goodbye;
+procedure Goodbye;
 begin
- for j:=1 to FIELDHEIGHT do 
-  delrow(j-1);
- settextstyle(0,0,2);
- writeonfield(13,50,'Come');
- writeonfield(15,80,'back');
- writeonfield(1,110,'soon:)');
- pausepicture(time*1500);
+ for j:=1 to FIELD_HEIGHT do 
+  DelRow(j-1);
+ WriteOnField(13,50,'Come');
+ WriteOnField(15,80,'back');
+ WriteOnField(1,110,'soon:)');
+ PausePicture(_Time*1500);
  halt;
-end;{goodbye}
+end;{Goodbye}
 
-procedure epicwin;
+procedure EpicWin;
 begin
- delfnext;
- settextstyle(0,0,2);
- writeonfield(20,50,'You');
- writeonfield(20,80,'did');
- writeonfield(21,110,'it!');
- settextstyle(0,0,1);
- menubar(49,171,100,181);
- menubar(49,156,100,166); 
- pausepicture(time*1500);
- fieldbar(0,49,90,130);
+ DelFigNext;
+ WriteOnField(20,50,'You');
+ WriteOnField(20,80,'did');
+ WriteOnField(21,110,'it!');
+ BarOnMenu(49,171,100,181);
+ BarOnMenu(49,156,100,166); 
+ PausePicture(_Time*1500);
+ BarOnField(0,49,90,130);
  readkey;
-end;{epicwin}
+end;{EpicWin}
 
 {====================================================}
 
-procedure closegame;
+procedure CloseGame;
 begin
- goodbye;
- freemem(pix,spix);
+ Goodbye;
+ freemem(_Pix,_PixSize);
  closegraph;
  halt;
-end;{closegame}
+end;{CloseGame}
 
-procedure setupgraph;
+procedure SetupGraph;
 begin
- DetectGraph(d,m);
- InitGraph(d,m,'');
+ DetectGraph(_GraphDriver,_GraphMode);
+ InitGraph(_GraphDriver,_GraphMode,'');
  if GraphResult <> grOk 
   then begin
    clrscr;
-   writeln(GraphErrorMsg(er));
+   writeln(GraphErrorMsg(_GraphError));
    writeln('Press any key to exit.');
    readkey
   end;
-end;{setupgraph}
+end;{SetupGraph}
 
-procedure setupplayground;
+procedure SetupPlayGround;
 begin
- {background color: light-gray}
  cleardevice;
- setfillstyle(1,7);
+ SetDefaultTextStyle;
+ SetDefaultFillStyle;
+ SetDefaultColor;
+ SetDefaultLineStyle;
  bar(0,0,getmaxx,getmaxy);
 
  {draw game field}
- playground; 
+ PlayGround; 
 
- {draw side menu}
- menu; 
-end;{setupplayground}
+ {draw side Menu}
+ Menu; 
+end;{SetupPlayGround}
 
-procedure startgame;
+procedure StartGame;
 begin
- alines:=0;
- score:=0;
- level:=1;
- f:=random(FIGURECOUNT)+1;
- fnext:=random(FIGURECOUNT)+1;
+ _TotalLines:=0;
+ _Score:=0;
+ _Level:=1;
+ _FigureNow:=random(FIGURE_COUNT)+1;
+ _FigNext:=random(FIGURE_COUNT)+1;
  
  {ready? go!}
- hello;
-end;{startgame}
+ Hello;
+end;{StartGame}
 
-procedure startlevel;
+procedure StartLevel;
 begin
- settextstyle(0,0,1);
- speed:=1;
- menubar(49,171,100,181);
- writeonmenu(50,172,'1');{speed}
-end;{startlevel}
+ _Speed:=1;
+ str(_Speed, _Output);
+ BarOnMenu(49,171,100,181);
+ settextstyle(DefaultFont,HOR_TEXT,SMALL_TEXT);
+ WriteOnMenu(50,172,_Output);{_Speed}
+ SetDefaultTextStyle;
+end;{StartLevel}
 
-procedure writelevel;
+procedure WriteLevel;
 begin
- setfillstyle(1,7);
- settextstyle(0,0,1);
- str(level,a);
- menubar(49,156,100,166);
- if (level<=MAXLEVEL) {level}
-  then writeonmenu(50,157,a);
-end;{writelevel}
+ str(_Level,_Output);
+ BarOnMenu(49,156,100,166);
+ if (_Level<=MAX_LEVEL) {Level}
+  then begin
+   settextstyle(DefaultFont,HOR_TEXT,SMALL_TEXT);
+   WriteOnMenu(50,157,_Output);
+   SetDefaultTextStyle;
+  end;
+end;{WriteLevel}
 
-procedure drawlevel;
+procedure DrawLevel;
 begin
- for j:=0 to (FIELDHEIGHT-level+1) do
+ for j:=0 to (FIELD_HEIGHT-_Level+1) do
  begin
-  sv[j]:=0;
-  for i:=1 to FIELDWIDTH do 
-   s[i,j]:=false;
+  _LinesSum[j]:=0;
+  for i:=1 to FIELD_WIDTH do 
+   _MainField[i,j]:=false;
  end;
- if (level>1) 
+ if (_Level>=2) 
   then
-   for j:=(FIELDHEIGHT-level+2) to FIELDHEIGHT do
-    for i:=1 to FIELDWIDTH do 
+   for j:=(FIELD_HEIGHT-_Level+2) to FIELD_HEIGHT do
+    for i:=1 to FIELD_WIDTH do 
     begin
      if random(2)=0 
-      then s[i,j]:=false
-      else s[i,j]:=true;
-     if s[i,j]
+      then _MainField[i,j]:=false
+      else _MainField[i,j]:=true;
+     if _MainField[i,j]
       then begin
-       sv[j]:=sv[j]+1;
-       pixel(i-1,j-1,LEFTX);
+       _LinesSum[j]:=_LinesSum[j]+1;
+       Pixel(i-1,j-1,LEFTX);
       end;
     end;
-end;{drawlevel}
+end;{DrawLevel}
 
-procedure drawfigures;
+procedure DrawFigures;
 begin
  {draw next figure}
- delfnext;
- fnext:=random(FIGURECOUNT)+1;
- newfnext;
+ DelFigNext;
+ _FigNext:=random(FIGURE_COUNT)+1;
+ NewFigNext;
 
  {top left point of figure}
- xnow:=3; 
- ynow:=-1;
- case f of
+ _Xnow:=3; 
+ _Ynow:=-1;
+ case _FigureNow of
   3,8,9,11:
-   inc(ynow);
+   inc(_Ynow);
  end;
  
  {draw current figure}
- newfigure; 
-end;{drawfigures}
+ NewFigure; 
+end;{DrawFigures}
 
-procedure addfigure;
+procedure AddFigure;
 var 
- u,v:integer;
+ x,y:integer;
 begin
- p:=1;
- v:=1;
- for i:=1 to FIGSIZE do 
+ _Point:=1;
+ y:=1;
+ for i:=1 to FIG_SIZE do 
  begin
-  for j:=1 to FIGSIZE do
-   if fbox[i,j]
+  for j:=1 to FIG_SIZE do
+   if _FigBox[i,j]
     then begin
-     u:=xnow+i;
-     v:=ynow+j;
-     s[u,v]:=true;
-     sv[v]:=sv[v]+1;
+     x:=_Xnow+i;
+     y:=_Ynow+j;
+     _MainField[x,y]:=true;
+     _LinesSum[y]:=_LinesSum[y]+1;
     end;
-  if (v>p) 
-   then p:=v;
+  if (y>_Point) 
+   then _Point:=y;
  end;
-end;{addfigure}
+end;{AddFigure}
 
-procedure nextspeed;
+procedure NextSpeed;
 begin
  {clear screen and go to next speed}
- finishspeed; 
- if speed<=MAXSPEED 
-  then win
+ FinishSpeed; 
+ if _Speed<=MAX_SPEED 
+  then Win
   else 
-   if level<MAXLEVEL 
-    then winlevel;
-end;{nextspeed}
+   if _Level<MAX_LEVEL 
+    then WinLevel;
+end;{NextSpeed}
 
 {====================================================}
 
 begin
  randomize;
  clrscr;
- timing;
- setupgraph;
- setupplayground;
- savepixel;
- savefigures;
- finish:=false;
- while not finish do {game session}
+ Timing;
+ SetupGraph;
+ SetupPlayGround;
+ SavePixel;
+ SaveFigures;
+ _IsFinish:=false;
+ while not _IsFinish do {game session}
  begin
-  startgame;
+  StartGame;
   888:
   repeat {one level}
-   startlevel;
-   writelevel;
-   while (speed<=MAXSPEED) do {one speed}
+   StartLevel;
+   WriteLevel;
+   while (_Speed<=MAX_SPEED) do {one speed}
    begin
-    lines:=0;
+    _OneSpeedLines:=0;
     {initial filling of field matrix with zeros + level}
-    drawlevel; 
+    DrawLevel; 
     repeat{one figure fall}
      if keypressed 
       then readkey;
      
      {draw current and next figures} 
-     drawfigures;
+     DrawFigures;
      
      {main fall and control}
-     fall; 
-     if finish 
-      then closegame;
+     FallControl; 
+     if _IsFinish 
+      then CloseGame;
      
      {add freshly fallen figure to the field matrix}
-     addfigure; 
+     AddFigure; 
 
      {delete full rows if there are any}
-     delete; 
+     Delete; 
 
      {check if level is lost and goto start if yes}
-     if (sv[1]>0) 
+     if (_LinesSum[1]>0) 
       then begin 
-       looser; 
-       again;
+       Looser; 
+       Again;
        goto 888;
       end;
 
-     f:=fnext;
-    until (lines>=MAXLINES); {one figure fall}
-    nextspeed;
-   end; {one speed}
-   inc(level);
-   writelevel;
-  until (level>MAXLEVEL); {one level}
-  epicwin;
+     _FigureNow:=_FigNext;
+    until (_OneSpeedLines>=MAX_LINES); {one figure fall}
+    NextSpeed;
+   end; {one Speed}
+   inc(_Level);
+   WriteLevel;
+  until (_Level>MAX_LEVEL); {one level}
+  EpicWin;
  end; {game session}
 end.
