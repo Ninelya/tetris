@@ -7,7 +7,8 @@ label 888; {Again}
 const
  MAX_LEVEL=16;{>=1}
  MAX_LINES=15;{>=1}
- MAX_SPEED=5; {>1}
+ MAX_SPEED=2; {>1}
+ ONE_ROW_SCORE=50;
  
  MIN_LEVEL=1;	
  MIN_SPEED=1;	
@@ -20,7 +21,25 @@ const
  FIG_SIZE=4;
  FIGURE_COUNT=19;
  
- FIGURE_STICK=3;
+ FIG_O=1;
+ FIG_I=2;
+ FIG_I_DOWN=3;
+ FIG_S=4;
+ FIG_S_LEFT=5;
+ FIG_Z=6;
+ FIG_Z_RIGHT=7;
+ FIG_T=8;
+ FIG_T_LEFT=9;
+ FIG_T_DOWN=10;
+ FIG_T_RIGHT=11;
+ FIG_J=12;
+ FIG_J_LEFT=13;
+ FIG_J_DOWN=14;
+ FIG_J_RIGHT=15;
+ FIG_L=16;
+ FIG_L_LEFT=17;
+ FIG_L_DOWN=18;
+ FIG_L_RIGHT=19;
 
  YTOP=73; {top left point of the field}
  XLEFT=275;
@@ -58,177 +77,183 @@ var
  i,j:integer; 
  
 procedure SaveFigures;
+var
+ x,y:integer;
 begin
- _Box[1,1,1]:=2; {....}
- _Box[1,1,2]:=2; {.xx.}
- _Box[1,2,1]:=2; {.xx.}
- _Box[1,2,2]:=3; {....}
- _Box[1,3,1]:=3;
- _Box[1,3,2]:=2;
- _Box[1,4,1]:=3;
- _Box[1,4,2]:=3;
+ x:=1;
+ y:=2;
+
+ _Box[FIG_O,1,x]:=2;       {  1234}
+ _Box[FIG_O,1,y]:=2;       {1 ....}
+ _Box[FIG_O,2,x]:=2;       {2 .13.}
+ _Box[FIG_O,2,y]:=3;       {3 .24.}
+ _Box[FIG_O,3,x]:=3;       {4 ....}
+ _Box[FIG_O,3,y]:=2;
+ _Box[FIG_O,4,x]:=3;
+ _Box[FIG_O,4,y]:=3;
  
- _Box[2,1,1]:=1; {....} 
- _Box[2,1,2]:=2; {xxxx}
- _Box[2,2,1]:=2; {....}
- _Box[2,2,2]:=2; {....}
- _Box[2,3,1]:=3;
- _Box[2,3,2]:=2;
- _Box[2,4,1]:=4;
- _Box[2,4,2]:=2;
+ _Box[FIG_I,1,x]:=2;       {  1234}
+ _Box[FIG_I,1,y]:=1;       {1 .1..}
+ _Box[FIG_I,2,x]:=2;       {2 .2..}
+ _Box[FIG_I,2,y]:=2;       {3 .3..}
+ _Box[FIG_I,3,x]:=2;       {4 .4..}
+ _Box[FIG_I,3,y]:=3;
+ _Box[FIG_I,4,x]:=2;
+ _Box[FIG_I,4,y]:=4;
  
- _Box[3,1,1]:=2; {.x..}
- _Box[3,1,2]:=1; {.x..}
- _Box[3,2,1]:=2; {.x..}
- _Box[3,2,2]:=2; {.x..}
- _Box[3,3,1]:=2;
- _Box[3,3,2]:=3;
- _Box[3,4,1]:=2;
- _Box[3,4,2]:=4;
+ _Box[FIG_I_DOWN,1,x]:=1;  {  1234}
+ _Box[FIG_I_DOWN,1,y]:=2;  {1 ....}
+ _Box[FIG_I_DOWN,2,x]:=2;  {2 1234}
+ _Box[FIG_I_DOWN,2,y]:=2;  {3 ....}
+ _Box[FIG_I_DOWN,3,x]:=3;  {4 ....}
+ _Box[FIG_I_DOWN,3,y]:=2;
+ _Box[FIG_I_DOWN,4,x]:=4;
+ _Box[FIG_I_DOWN,4,y]:=2;
  
- _Box[4,1,1]:=2; {....}
- _Box[4,1,2]:=2; {.x..}
- _Box[4,2,1]:=2; {.xx.}
- _Box[4,2,2]:=3; {..x.}
- _Box[4,3,1]:=3;
- _Box[4,3,2]:=3;
- _Box[4,4,1]:=3;
- _Box[4,4,2]:=4;
+ _Box[FIG_S,1,x]:=2;       {  1234}
+ _Box[FIG_S,1,y]:=2;       {1 ....}
+ _Box[FIG_S,2,x]:=3;       {2 .12.}
+ _Box[FIG_S,2,y]:=2;       {3 34..}
+ _Box[FIG_S,3,x]:=1;       {4 ....}
+ _Box[FIG_S,3,y]:=3;
+ _Box[FIG_S,4,x]:=2;
+ _Box[FIG_S,4,y]:=3;
  
- _Box[5,1,1]:=2; {....}
- _Box[5,1,2]:=2; {.xx.}
- _Box[5,2,1]:=3; {xx..}
- _Box[5,2,2]:=2; {....}
- _Box[5,3,1]:=1;
- _Box[5,3,2]:=3;
- _Box[5,4,1]:=2;
- _Box[5,4,2]:=3;
+ _Box[FIG_S_LEFT,1,x]:=2;  {  1234}
+ _Box[FIG_S_LEFT,1,y]:=2;  {1 ....}
+ _Box[FIG_S_LEFT,2,x]:=2;  {2 .1..}
+ _Box[FIG_S_LEFT,2,y]:=3;  {3 .23.}
+ _Box[FIG_S_LEFT,3,x]:=3;  {4 ..4.}
+ _Box[FIG_S_LEFT,3,y]:=3;
+ _Box[FIG_S_LEFT,4,x]:=3;
+ _Box[FIG_S_LEFT,4,y]:=4;
+
+ _Box[FIG_Z,1,x]:=1;       {  1234}
+ _Box[FIG_Z,1,y]:=2;       {1 ....}
+ _Box[FIG_Z,2,x]:=2;       {2 12..}
+ _Box[FIG_Z,2,y]:=2;       {3 .34.}
+ _Box[FIG_Z,3,x]:=2;       {4 ....}
+ _Box[FIG_Z,3,y]:=3;
+ _Box[FIG_Z,4,x]:=3;
+ _Box[FIG_Z,4,y]:=3;
  
- _Box[6,1,1]:=3; {....}
- _Box[6,1,2]:=2; {..x.}
- _Box[6,2,1]:=3; {.xx.}
- _Box[6,2,2]:=3; {.x..}
- _Box[6,3,1]:=2;
- _Box[6,3,2]:=3;
- _Box[6,4,1]:=2;
- _Box[6,4,2]:=4;
+ _Box[FIG_Z_RIGHT,1,x]:=3; {  1234}
+ _Box[FIG_Z_RIGHT,1,y]:=2; {1 ....}
+ _Box[FIG_Z_RIGHT,2,x]:=3; {2 ..1.}
+ _Box[FIG_Z_RIGHT,2,y]:=3; {3 .32.}
+ _Box[FIG_Z_RIGHT,3,x]:=2; {4 .4..}
+ _Box[FIG_Z_RIGHT,3,y]:=3;
+ _Box[FIG_Z_RIGHT,4,x]:=2;
+ _Box[FIG_Z_RIGHT,4,y]:=4;
  
- _Box[7,1,1]:=1; {....}
- _Box[7,1,2]:=2; {xx..}
- _Box[7,2,1]:=2; {.xx.}
- _Box[7,2,2]:=2; {....}
- _Box[7,3,1]:=2;
- _Box[7,3,2]:=3;
- _Box[7,4,1]:=3;
- _Box[7,4,2]:=3;
+ _Box[FIG_T,1,x]:=1;       {  1234}      
+ _Box[FIG_T,1,y]:=2;       {1 ....}        
+ _Box[FIG_T,2,x]:=2;       {2 123.}        
+ _Box[FIG_T,2,y]:=2;       {3 .4..}        
+ _Box[FIG_T,3,x]:=3;       {4 ....}
+ _Box[FIG_T,3,y]:=2;
+ _Box[FIG_T,4,x]:=2;                     
+ _Box[FIG_T,4,y]:=3;
+
+ _Box[FIG_T_LEFT,1,x]:=2;  {  1234}        
+ _Box[FIG_T_LEFT,1,y]:=1;  {1 .1..}         
+ _Box[FIG_T_LEFT,2,x]:=2;  {2 .24.}         
+ _Box[FIG_T_LEFT,2,y]:=2;  {3 .3..}         
+ _Box[FIG_T_LEFT,3,x]:=2;  {4 ....}               
+ _Box[FIG_T_LEFT,3,y]:=3;
+ _Box[FIG_T_LEFT,4,x]:=3;
+ _Box[FIG_T_LEFT,4,y]:=2;
+
+ _Box[FIG_T_DOWN,1,x]:=2;  {  1234}
+ _Box[FIG_T_DOWN,1,y]:=1;  {1 .1..}
+ _Box[FIG_T_DOWN,2,x]:=1;  {2 234.}
+ _Box[FIG_T_DOWN,2,y]:=2;  {3 ....}
+ _Box[FIG_T_DOWN,3,x]:=2;  {4 ....}
+ _Box[FIG_T_DOWN,3,y]:=2;  
+ _Box[FIG_T_DOWN,4,x]:=3;
+ _Box[FIG_T_DOWN,4,y]:=2;
  
- _Box[8,1,1]:=1; {.x..}
- _Box[8,1,2]:=2; {xxx.}
- _Box[8,2,1]:=2; {....}
- _Box[8,2,2]:=2; {....}
- _Box[8,3,1]:=2;
- _Box[8,3,2]:=1;
- _Box[8,4,1]:=3;
- _Box[8,4,2]:=2;
+ _Box[FIG_T_RIGHT,1,x]:=1; {  1234}          
+ _Box[FIG_T_RIGHT,1,y]:=2; {1 .2..}
+ _Box[FIG_T_RIGHT,2,x]:=2; {2 13..}          
+ _Box[FIG_T_RIGHT,2,y]:=1; {3 .4..}
+ _Box[FIG_T_RIGHT,3,x]:=2; {4 ....}          
+ _Box[FIG_T_RIGHT,3,y]:=2;            
+ _Box[FIG_T_RIGHT,4,x]:=2;
+ _Box[FIG_T_RIGHT,4,y]:=3;
  
- _Box[9,1,1]:=1; {.x..}
- _Box[9,1,2]:=2; {xx..}
- _Box[9,2,1]:=2; {.x..}
- _Box[9,2,2]:=2; {....}
- _Box[9,3,1]:=2;
- _Box[9,3,2]:=1;
- _Box[9,4,1]:=2;
- _Box[9,4,2]:=3;
+ _Box[FIG_J,1,x]:=2;       {  1234}   
+ _Box[FIG_J,1,y]:=2;       {1 ....}  
+ _Box[FIG_J,2,x]:=2;       {2 .1..}  
+ _Box[FIG_J,2,y]:=3;       {3 .2..}  
+ _Box[FIG_J,3,x]:=2;       {4 43..}
+ _Box[FIG_J,3,y]:=4;
+ _Box[FIG_J,4,x]:=1;
+ _Box[FIG_J,4,y]:=4;
  
- _Box[10,1,1]:=1; {....}
- _Box[10,1,2]:=2; {xxx.}
- _Box[10,2,1]:=2; {.x..}
- _Box[10,2,2]:=2; {....}
- _Box[10,3,1]:=2;
- _Box[10,3,2]:=3;
- _Box[10,4,1]:=3;
- _Box[10,4,2]:=2;
+ _Box[FIG_J_LEFT,1,x]:=1;  {  1234}
+ _Box[FIG_J_LEFT,1,y]:=2;  {1 ....}
+ _Box[FIG_J_LEFT,2,x]:=2;  {2 123.}    
+ _Box[FIG_J_LEFT,2,y]:=2;  {3 ..4.}    
+ _Box[FIG_J_LEFT,3,x]:=3;  {4 ....}    
+ _Box[FIG_J_LEFT,3,y]:=2;      
+ _Box[FIG_J_LEFT,4,x]:=3;
+ _Box[FIG_J_LEFT,4,y]:=3;
  
- _Box[11,1,1]:=2; {.x..}
- _Box[11,1,2]:=1; {.xx.}
- _Box[11,2,1]:=2; {.x..}
- _Box[11,2,2]:=2; {....}
- _Box[11,3,1]:=2;
- _Box[11,3,2]:=3;
- _Box[11,4,1]:=3;
- _Box[11,4,2]:=2;
+ _Box[FIG_J_DOWN,1,x]:=2;  {  1234}
+ _Box[FIG_J_DOWN,1,y]:=2;  {1 ....}
+ _Box[FIG_J_DOWN,2,x]:=2;  {2 .14.}
+ _Box[FIG_J_DOWN,2,y]:=3;  {3 .2..}
+ _Box[FIG_J_DOWN,3,x]:=2;  {4 .3..}
+ _Box[FIG_J_DOWN,3,y]:=4; 
+ _Box[FIG_J_DOWN,4,x]:=3;
+ _Box[FIG_J_DOWN,4,y]:=2;
  
- _Box[12,1,1]:=2; {....}
- _Box[12,1,2]:=4; {.xx.}
- _Box[12,2,1]:=2; {.x..}
- _Box[12,2,2]:=2; {.x..}
- _Box[12,3,1]:=2;
- _Box[12,3,2]:=3;
- _Box[12,4,1]:=3;
- _Box[12,4,2]:=2;
+ _Box[FIG_J_RIGHT,1,x]:=1; {  1234}           
+ _Box[FIG_J_RIGHT,1,y]:=3; {1 ....}           
+ _Box[FIG_J_RIGHT,2,x]:=2; {2 4...}                 
+ _Box[FIG_J_RIGHT,2,y]:=3; {3 123.}
+ _Box[FIG_J_RIGHT,3,x]:=3; {4 ....}           
+ _Box[FIG_J_RIGHT,3,y]:=3;            
+ _Box[FIG_J_RIGHT,4,x]:=1;
+ _Box[FIG_J_RIGHT,4,y]:=2;
  
- _Box[13,1,1]:=1; {....}
- _Box[13,1,2]:=3; {x...}
- _Box[13,2,1]:=3; {xxx.}
- _Box[13,2,2]:=3; {....}
- _Box[13,3,1]:=2;
- _Box[13,3,2]:=3;
- _Box[13,4,1]:=1;
- _Box[13,4,2]:=2;
+ _Box[FIG_L,1,x]:=2;       {  1234}
+ _Box[FIG_L,1,y]:=2;       {1 ....}
+ _Box[FIG_L,2,x]:=2;       {2 .1..}
+ _Box[FIG_L,2,y]:=3;       {3 .2..}
+ _Box[FIG_L,3,x]:=2;       {4 .34.}
+ _Box[FIG_L,3,y]:=4;
+ _Box[FIG_L,4,x]:=3;
+ _Box[FIG_L,4,y]:=4;
  
- _Box[14,1,1]:=2; {....}
- _Box[14,1,2]:=2; {.x..}
- _Box[14,2,1]:=2; {.x..}
- _Box[14,2,2]:=3; {xx..}
- _Box[14,3,1]:=2;
- _Box[14,3,2]:=4;
- _Box[14,4,1]:=1;
- _Box[14,4,2]:=4;
+ _Box[FIG_L_LEFT,1,x]:=1;  {  1234}    
+ _Box[FIG_L_LEFT,1,y]:=3;  {1 ....}    
+ _Box[FIG_L_LEFT,2,x]:=2;  {2 ..4.}    
+ _Box[FIG_L_LEFT,2,y]:=3;  {3 123.}    
+ _Box[FIG_L_LEFT,3,x]:=3;  {4 ....}
+ _Box[FIG_L_LEFT,3,y]:=3;
+ _Box[FIG_L_LEFT,4,x]:=3;
+ _Box[FIG_L_LEFT,4,y]:=2;
+
+ _Box[FIG_L_DOWN,1,x]:=1;  {  1234}        
+ _Box[FIG_L_DOWN,1,y]:=2;  {1 ....}       
+ _Box[FIG_L_DOWN,2,x]:=2;  {2 12..}       
+ _Box[FIG_L_DOWN,2,y]:=2;  {3 .3..}       
+ _Box[FIG_L_DOWN,3,x]:=2;  {4 .4..}
+ _Box[FIG_L_DOWN,3,y]:=3;
+ _Box[FIG_L_DOWN,4,x]:=2;
+ _Box[FIG_L_DOWN,4,y]:=4;
  
- _Box[15,1,1]:=2; {....}
- _Box[15,1,2]:=2; {xxx.}
- _Box[15,2,1]:=3; {..x.}
- _Box[15,2,2]:=2; {....}
- _Box[15,3,1]:=3;
- _Box[15,3,2]:=3;
- _Box[15,4,1]:=1;
- _Box[15,4,2]:=2;
- 
- _Box[16,1,1]:=1; {....}
- _Box[16,1,2]:=2; {xx..}
- _Box[16,2,1]:=2; {.x..}
- _Box[16,2,2]:=2; {.x..}
- _Box[16,3,1]:=2;
- _Box[16,3,2]:=3;
- _Box[16,4,1]:=2;
- _Box[16,4,2]:=4;
- 
- _Box[17,1,1]:=1; {....}
- _Box[17,1,2]:=2; {xxx.}
- _Box[17,2,1]:=2; {x...}
- _Box[17,2,2]:=2; {....}
- _Box[17,3,1]:=3;
- _Box[17,3,2]:=2;
- _Box[17,4,1]:=1;
- _Box[17,4,2]:=3;
- 
- _Box[18,1,1]:=2; {....}
- _Box[18,1,2]:=3; {.x..}
- _Box[18,2,1]:=2; {.x..}
- _Box[18,2,2]:=2; {.xx.}
- _Box[18,3,1]:=2;
- _Box[18,3,2]:=4;
- _Box[18,4,1]:=3;
- _Box[18,4,2]:=4;
- 
- _Box[19,1,1]:=2; {....}
- _Box[19,1,2]:=3; {..x.}
- _Box[19,2,1]:=1; {xxx.}
- _Box[19,2,2]:=3; {....}
- _Box[19,3,1]:=3;
- _Box[19,3,2]:=3;
- _Box[19,4,1]:=3;
- _Box[19,4,2]:=2;
+ _Box[FIG_L_RIGHT,1,x]:=1; {  1234}      
+ _Box[FIG_L_RIGHT,1,y]:=2; {1 ....}     
+ _Box[FIG_L_RIGHT,2,x]:=2; {2 123.}     
+ _Box[FIG_L_RIGHT,2,y]:=2; {3 4...}     
+ _Box[FIG_L_RIGHT,3,x]:=3; {4 ....}
+ _Box[FIG_L_RIGHT,3,y]:=2;
+ _Box[FIG_L_RIGHT,4,x]:=1;
+ _Box[FIG_L_RIGHT,4,y]:=3;
+
 end;{SaveFigures}
 
 {====================================================}
@@ -583,7 +608,7 @@ begin
   0: MoveRight;
   11: begin
    MoveLeft;
-   if _FigureNow=FIGURE_STICK 
+   if _FigureNow=FIG_I
     then MoveLeft;
   end;
  end;
@@ -621,11 +646,13 @@ var
  newFig:integer;
 begin
  case _FigureNow of
-  1: newFig:=_FigureNow;
-  3,5,7: newFig:=_FigureNow-1;
-  11: newFig:=8;
-  15: newFig:=12;
-  19: newFig:=16;
+  FIG_O: newFig:=_FigureNow;
+  FIG_I_DOWN,
+  FIG_S_LEFT,
+  FIG_Z_RIGHT: newFig:=_FigureNow-1;
+  FIG_T_RIGHT: newFig:=FIG_T;
+  FIG_J_RIGHT: newFig:=FIG_J;
+  FIG_L_RIGHT: newFig:=FIG_L;
   else newFig:=_FigureNow+1;
  end;
  if CheckRotate(newFig)
@@ -784,7 +811,7 @@ begin
    str(_TotalLines,_Output);
    WriteOnMenu(50,45,_Output);{rows}
 
-   _Score:=_Score+50+fullRowsNum*50; 
+   _Score:=_Score+(fullRowsNum+1)*ONE_ROW_SCORE; 
    BarOnMenu(49,59,100,69);
    str(_Score,_Output);
    WriteOnMenu(50,60,_Output);{scores}
@@ -1033,9 +1060,7 @@ begin
    for j:=(FIELD_HEIGHT-_Level+2) to FIELD_HEIGHT do
     for i:=1 to FIELD_WIDTH do 
     begin
-     if random(2)=0 
-      then _MainField[i,j]:=false
-      else _MainField[i,j]:=true;
+     _MainField[i,j]:=random(2)=0;
      if _MainField[i,j]
       then begin
        _LinesSum[j]:=_LinesSum[j]+1;
@@ -1054,13 +1079,14 @@ begin
  {top left point of figure}
  _Xnow:=XNOW_FIRST; 
  _Ynow:=YNOW_FIRST;
- case _FigureNow of
-  3,8,9,11:
-   inc(_Ynow);
- end;
- 
- {draw current figure}
- NewFigure; 
+ for i:=1 to FIG_SIZE do
+  if (_Box[_FigureNow,i,2]=1)
+   then begin
+    inc(_Ynow);
+	break;
+   end;
+  
+ NewFigure; {draw current figure}
 end;{DrawFigures}
 
 procedure AddFigure;
