@@ -8,16 +8,25 @@ const
  MAX_LEVEL=16;{>=1}
  MAX_LINES=15;{>=1}
  MAX_SPEED=5; {>1}
+ 
+ MIN_LEVEL=1;	
+ MIN_SPEED=1;	
+ MIN_LINES=0;	
+ MIN_SCORE=0;
 
  PIXEL_SIZE=9;
  FIELD_WIDTH=10;
  FIELD_HEIGHT=20;
  FIG_SIZE=4;
  FIGURE_COUNT=19;
+ 
+ FIGURE_STICK=3;
 
- TOPY=73; {top left point of the field}
- LEFTX=275;
- XM=370; {left coordinate of the next figure in Menu}
+ YTOP=73; {top left point of the field}
+ XLEFT=275;
+ XMENU=370; {left coordinate of the next figure in Menu}
+ XNOW_FIRST=3;{first coords of the falling figure}
+ YNOW_FIRST=-1;
 
  STANDARD_LINE=0;
  HOR_TEXT=0;
@@ -28,24 +37,25 @@ const
  
 var 
  _Speed,_Score,_OneSpeedLines,_TotalLines:word;
+ _Level:integer;
  _IsFinish:boolean;
- _Output:string;
- 
- _Level:integer;{level number}
+  
  _FigureNow,_FigNext:integer; {number of current and next figures}
  _Point:integer; {bottom left point of fallen figure}
- _GraphDriver,_GraphMode,_GraphError:integer;{for graphics setup}
  _Xnow,_Ynow:integer; {current coords of the figure}
  _Pix:pointer;{one square}
  _PixSize:longint; {size of the square}
  _Time:longint;{number of ticks in 1 milisecond}
- i,j:integer; {technical}
-
- {main and extra field matrixes with extra line and column}
- _MainField,_MainFieldCopy:array[1..FIELD_WIDTH,0..FIELD_HEIGHT] of boolean; 
+ 
+ {main field matrix with extra line and column}
+ _MainField:array[1..FIELD_WIDTH,0..FIELD_HEIGHT] of boolean; 
  _LinesSum:array[0..FIELD_HEIGHT] of integer; {sum of lines}
  _FigBox:array[1..FIG_SIZE,1..FIG_SIZE] of boolean; {figure matrix}
- _Box:array[1..FIGURE_COUNT,1..FIG_SIZE,1..2] of integer; {Pixels coordinates of all figures}
+ _Box:array[1..FIGURE_COUNT,1..FIG_SIZE,1..2] of integer; {Pixels' coordinates of all figures}
+ 
+ {technical}
+ _Output:string;
+ i,j:integer; 
  
 procedure SaveFigures;
 begin
@@ -287,20 +297,20 @@ end;{SetDefaultLineStyle}
 
 procedure BarOnField(x1,y1,x2,y2:integer);
 begin
- bar(LEFTX+x1,TOPY+y1,LEFTX+x2,TOPY+y2);
+ bar(XLEFT+x1,YTOP+y1,XLEFT+x2,YTOP+y2);
 end;{BarOnField}
 
 procedure BarOnMenu(x1,y1,x2,y2:integer);
 begin
- bar(XM+x1,TOPY+y1,XM+x2,TOPY+y2);
+ bar(XMENU+x1,YTOP+y1,XMENU+x2,YTOP+y2);
 end;{BarOnMenu}
 
 procedure Eraser(xi,yi,x0,y0:integer);
 var
  x,y:integer;
 begin
- x:=x0+xi*PIXEL_SIZE;
- y:=y0+yi*PIXEL_SIZE;
+ x:=x0+(xi-1)*PIXEL_SIZE;
+ y:=y0+(yi-1)*PIXEL_SIZE;
  bar(x,y,x+7,y+7);
 end;{Eraser}
 
@@ -319,7 +329,7 @@ begin
  _PixSize:=imagesize(1,1,PIXEL_SIZE-1,PIXEL_SIZE-1);
  getmem(_Pix,_PixSize);
  getimage(1,1,PIXEL_SIZE-1,PIXEL_SIZE-1,_Pix^);
- Eraser(0,0,1,1);
+ Eraser(1,1,1,1);
 end;{SavePixel}
 
 procedure PlayGround;
@@ -339,12 +349,12 @@ end;{PlayGround}
 
 procedure WriteOnField(x,y:integer;s:string);
 begin
- outtextxy(LEFTX+x,TOPY+y,s);
+ outtextxy(XLEFT+x,YTOP+y,s);
 end;{WriteOnField}
 
 procedure WriteOnMenu(x,y:integer;s:string);
 begin
- outtextxy(XM+x,TOPY+y,s);
+ outtextxy(XMENU+x,YTOP+y,s);
 end;{WriteOnMenu}
 
 procedure Menu;
@@ -381,7 +391,7 @@ begin
  WriteOnField(-70,155,'D');
  WriteOnField(-70,175,'Space');
 
- WriteOnField(-50,95,chr(24)); {arrow up}
+ WriteOnField(-50,95,chr(24));  {arrow up}
  WriteOnField(-50,115,chr(25)); {arrow down}
  WriteOnField(-50,135,chr(27)); {arrow left}
  WriteOnField(-50,155,chr(26)); {arrow right}
@@ -395,7 +405,7 @@ end;{Menu}
 
 procedure Pixel (x,y,x0:integer);
 begin
- putimage(x0+x*PIXEL_SIZE,TOPY+y*PIXEL_SIZE,_Pix^,0);
+ putimage(x0+(x-1)*PIXEL_SIZE, YTOP+(y-1)*PIXEL_SIZE, _Pix^, 0);
 end;{Pixel}
 
 procedure NewFig(figure,xi,yi,x0:integer);
@@ -410,18 +420,18 @@ begin
   x:=_Box[figure,i,1];
   y:=_Box[figure,i,2];
   _FigBox[x,y]:=true;
-  Pixel(xi+x-1,yi+y-1,x0);
+  Pixel(xi+x,yi+y,x0);
  end;
 end;{NewFig}
 
 procedure NewFigure;
 begin
- NewFig(_FigureNow,_Xnow,_Ynow,LEFTX);
+ NewFig(_FigureNow,_Xnow,_Ynow,XLEFT);
 end;{NewFigure}
 
 procedure NewFigNext;
 begin
- NewFig(_FigNext,0,0,XM);
+ NewFig(_FigNext,0,0,XMENU);
 end;{NewFigNext}
 
 procedure DelFig(figure,xi,yi,x0:integer);
@@ -432,30 +442,30 @@ begin
  begin
   x:=_Box[figure,i,1];
   y:=_Box[figure,i,2];
-  Eraser(xi+x-1,yi+y-1,x0,TOPY);
+  Eraser(xi+x,yi+y,x0,YTOP);
  end;
 end;{DelFig}
 
 procedure DelFigure;
 begin
- DelFig(_FigureNow,_Xnow,_Ynow,LEFTX);
+ DelFig(_FigureNow,_Xnow,_Ynow,XLEFT);
 end;{DelFigure}
 
 procedure DelFigNext;
 begin
- DelFig(_FigNext,0,0,XM);
+ DelFig(_FigNext,0,0,XMENU);
 end;{DelFigNext}
 
 procedure FullRow(y0:integer);
 begin
- for i:=0 to FIELD_WIDTH-1 do
-  Pixel(i,y0,LEFTX);
+ for i:=1 to FIELD_WIDTH do
+  Pixel(i,y0,XLEFT);
 end;{FullRow}
 
 procedure DelRow(y0:integer);
 begin
- for i:=0 to FIELD_WIDTH-1 do
-  Eraser(i,y0,LEFTX,TOPY);
+ for i:=1 to FIELD_WIDTH do
+  Eraser(i,y0,XLEFT,YTOP);
 end;{DelRow}
 
 function CheckFall: boolean;
@@ -568,11 +578,12 @@ var
  x,y:integer;
 begin
  x:=_Xnow+xi;
+ y:=_Ynow+yi; 
  case x of
   0: MoveRight;
   11: begin
    MoveLeft;
-   if _FigureNow=3 
+   if _FigureNow=FIGURE_STICK 
     then MoveLeft;
   end;
  end;
@@ -587,24 +598,21 @@ end;{CheckRot}
 
 function CheckRotate(newFig:integer): boolean;
 var
- newBox:array[1..FIG_SIZE,1..FIG_SIZE]of boolean;
  canRotate:boolean;
+ x,y:integer;
 begin
  if(newFig=_FigureNow)
-  then canRotate:=false
+  then canRotate:=false 
   else begin
    canRotate:=true;
-   for i:=1 to FIG_SIZE do
-    for j:=1 to FIG_SIZE do 
-	 newBox[i,j]:=false;
    for i:=1 to FIG_SIZE do 
-    newBox[_Box[newFig,i,1],_Box[newFig,i,2]]:=true;
-   for i:=1 to FIG_SIZE do
-    for j:=1 to FIG_SIZE do 
-     if not _FigBox[i,j] and newBox[i,j]
-      then canRotate:=canRotate and CheckRot(i,j);
+   begin
+    x:=_Box[newFig,i,1];
+    y:=_Box[newFig,i,2];
+	if not _FigBox[x,y]
+      then canRotate:=canRotate and CheckRot(x,y);
+   end;
   end;
- SetDefaultTextStyle;
  CheckRotate:=canRotate;
 end;{CheckRotate}
 
@@ -638,7 +646,7 @@ end;{Crash}
 
 procedure BlackPixel(x,y:integer);
 begin
- putpixel(XM+x,TOPY+y,Black);
+ putpixel(XMENU+x,YTOP+y,Black);
 end;
 
 procedure Pause;
@@ -646,11 +654,11 @@ begin
  setcolor(DarkGray);
  WriteOnMenu(0,80,'Pause');
  setfillstyle(SolidFill,DarkGray);
- pieslice(XM+30,TOPY+120,180,360,20);
+ pieslice(XMENU+30,YTOP+120,180,360,20);
  BarOnMenu(10,115,50,120);
  BarOnMenu(5,140,55,144);
  setlinestyle(SolidLn,STANDARD_LINE,ThickWidth);
- circle(XM+54,TOPY+125,7);
+ circle(XMENU+54,YTOP+125,7);
  SetDefaultLineStyle;
  SetDefaultFillStyle;
  SetDefaultColor;
@@ -747,35 +755,36 @@ end;{FallControl}
 
 procedure Delete;
 var 
- index,loweredLine:integer;
+ loweredLine,row,loweredSum,fullRowsNum:integer;
  fullRows:array[1..FIG_SIZE] of integer; {full rows to be deleted}
+ mainFieldCopy:array[1..FIELD_WIDTH,0..FIELD_HEIGHT] of boolean; 
 begin
- for j:=1 to FIG_SIZE do
-  fullRows[j]:=0;
- j:=0;
+ for i:=1 to FIG_SIZE do
+  fullRows[i]:=0;
  
- {remember indexes of full rows in array K}
+ {remember indexes of full rows in array fullRows}
+ fullRowsNum:=0;
  repeat
   if (_LinesSum[_Point]=FIELD_WIDTH) 
    then begin
-    inc(j);
-    fullRows[j]:=_Point; 
+    inc(fullRowsNum);
+    fullRows[fullRowsNum]:=_Point; 
    end;
   dec(_Point);
- until (_LinesSum[_Point]=0); {q - first non zero line, go bottom up}
+ until (_LinesSum[_Point]=0); {_Point - first non zero line, go bottom up}
 
- if (j>0) 
+ if (fullRowsNum>0) 
   then begin {there are full rows}
 
    {increment points and lines}
-   _OneSpeedLines:=_OneSpeedLines+j;
-   _TotalLines:=_TotalLines+j;
+   _OneSpeedLines:=_OneSpeedLines+fullRowsNum;
+   _TotalLines:=_TotalLines+fullRowsNum;
    BarOnMenu(49,44,100,54);
-   str(_TotalLines,_Output);
    settextstyle(DefaultFont,HOR_TEXT,SMALL_TEXT);
+   str(_TotalLines,_Output);
    WriteOnMenu(50,45,_Output);{rows}
 
-   _Score:=_Score+50+j*50; 
+   _Score:=_Score+50+fullRowsNum*50; 
    BarOnMenu(49,59,100,69);
    str(_Score,_Output);
    WriteOnMenu(50,60,_Output);{scores}
@@ -783,53 +792,53 @@ begin
 
    {blink with full rows}
    delay(_Time*250);
-   for index:=1 to j do 
-    DelRow(fullRows[index]-1);
+   for row:=1 to fullRowsNum do 
+    DelRow(fullRows[row]);
    delay(_Time*250);
-   for index:=1 to j do 
-    FullRow(fullRows[index]-1);
+   for row:=1 to fullRowsNum do 
+    FullRow(fullRows[row]);
    delay(_Time*250);
-   for index:=1 to j do 
+   for row:=1 to fullRowsNum do 
    begin
-    DelRow(fullRows[index]-1);
-    _LinesSum[fullRows[index]]:=0;
+    DelRow(fullRows[row]);
+    _LinesSum[fullRows[row]]:=0;
    end;
    delay(_Time*250);
    
    {_move down what's left_}
-   {save all visible to matrix W and arase}
-   loweredLine:=0; {number of remaining lines}
-   for index:=(_Point+1) to (fullRows[1]) do  {top to bottom}
+   {save all visible to matrix mainFieldCopy and arase}
+   loweredSum:=0; {number of remaining lines}
+   for loweredLine:=(_Point+1) to (fullRows[1]) do  {top to bottom}
    begin
-    if (_LinesSum[index]=0) 
+    if (_LinesSum[loweredLine]=0) 
      then begin
-      for j:=1 to FIELD_WIDTH do
-       _MainField[j,index]:=false;
+      for i:=1 to FIELD_WIDTH do
+       _MainField[i,loweredLine]:=false;
       continue;
      end
      else begin
-      inc(loweredLine);
-      for j:=1 to FIELD_WIDTH do 
+      inc(loweredSum);
+      for i:=1 to FIELD_WIDTH do 
       begin
-       _MainFieldCopy[j,loweredLine]:=_MainField[j,index];
-       _MainField[j,index]:=false;
+       mainFieldCopy[i,loweredSum]:=_MainField[i,loweredLine];
+       _MainField[i,loweredLine]:=false;
       end;
-      _LinesSum[index]:=0;
-      DelRow(index-1);
+      _LinesSum[loweredLine]:=0;
+      DelRow(loweredLine);
      end;
    end;
 
    {draw lowered lines}
-   for i:=1 to loweredLine do 
+   for j:=1 to loweredSum do 
    begin
-    index:=fullRows[1]-loweredLine+i;
-    for j:=1 to FIELD_WIDTH do 
+    loweredLine:=fullRows[1]-loweredSum+j;
+    for i:=1 to FIELD_WIDTH do 
     begin
-     _MainField[j,index]:=_MainFieldCopy[j,i];
-     if _MainField[j,index] 
+     _MainField[i,loweredLine]:=mainFieldCopy[i,j];
+     if _MainField[i,loweredLine] 
       then begin
-       Pixel(j-1,index-1,LEFTX);
-       _LinesSum[index]:=_LinesSum[index]+1;
+       Pixel(i,loweredLine,XLEFT);
+       inc(_LinesSum[loweredLine]);
       end;
     end;
    end;
@@ -851,15 +860,15 @@ procedure FinishSpeed;
 begin
  for j:=_Point-1 to FIELD_HEIGHT do 
  begin
-  DelRow(j-1);
+  DelRow(j);
   _LinesSum[j]:=0;
  end;
  inc(_Speed);
- str(_Speed,_Output);
  if _Speed<=MAX_SPEED 
   then begin
    BarOnMenu(49,171,100,181);
    settextstyle(DefaultFont,HOR_TEXT,SMALL_TEXT);
+   str(_Speed,_Output);
    WriteOnMenu(50,172,_Output);{_Speed}
    SetDefaultTextStyle;
   end;
@@ -900,26 +909,26 @@ begin
  begin 
   if (j mod 2 = 0) 
    then 
-    for i:=FIELD_WIDTH-1 downto 0 do 
+    for i:=FIELD_WIDTH downto 1 do 
     begin
-     Pixel(i,j-1,LEFTX);
+     Pixel(i,j,XLEFT);
      delay(_Time*20);
     end
    else
-    for i:=0 to FIELD_WIDTH-1 do 
+    for i:=1 to FIELD_WIDTH do 
     begin 
-     Pixel(i,j-1,LEFTX);
+     Pixel(i,j,XLEFT);
      delay(_Time*20);
     end;
  end;
  for j:=1 to FIELD_HEIGHT do 
-  DelRow(j-1);
+  DelRow(j);
 end;{Looser}
 
 procedure Goodbye;
 begin
  for j:=1 to FIELD_HEIGHT do 
-  DelRow(j-1);
+  DelRow(j);
  WriteOnField(13,50,'Come');
  WriteOnField(15,80,'back');
  WriteOnField(1,110,'soon:)');
@@ -951,13 +960,15 @@ begin
 end;{CloseGame}
 
 procedure SetupGraph;
+var
+  graphDriver,graphMode,graphError:integer;
 begin
- DetectGraph(_GraphDriver,_GraphMode);
- InitGraph(_GraphDriver,_GraphMode,'');
+ DetectGraph(graphDriver,graphMode);
+ InitGraph(graphDriver,graphMode,'');
  if GraphResult <> grOk 
   then begin
    clrscr;
-   writeln(GraphErrorMsg(_GraphError));
+   writeln(GraphErrorMsg(graphError));
    writeln('Press any key to exit.');
    readkey
   end;
@@ -972,42 +983,38 @@ begin
  SetDefaultLineStyle;
  bar(0,0,getmaxx,getmaxy);
 
- {draw game field}
- PlayGround; 
-
- {draw side Menu}
- Menu; 
+ PlayGround; {draw game field}
+ Menu; {draw side Menu}
 end;{SetupPlayGround}
 
 procedure StartGame;
 begin
- _TotalLines:=0;
- _Score:=0;
- _Level:=1;
+ _TotalLines:=MIN_LINES;
+ _Score:=MIN_SCORE;
+ _Level:=MIN_LEVEL;
  _FigureNow:=random(FIGURE_COUNT)+1;
  _FigNext:=random(FIGURE_COUNT)+1;
  
- {ready? go!}
- Hello;
+ Hello;{ready? go!}
 end;{StartGame}
 
 procedure StartLevel;
 begin
- _Speed:=1;
- str(_Speed, _Output);
+ _Speed:=MIN_SPEED;
  BarOnMenu(49,171,100,181);
  settextstyle(DefaultFont,HOR_TEXT,SMALL_TEXT);
+ str(_Speed, _Output);
  WriteOnMenu(50,172,_Output);{_Speed}
  SetDefaultTextStyle;
 end;{StartLevel}
 
 procedure WriteLevel;
 begin
- str(_Level,_Output);
  BarOnMenu(49,156,100,166);
  if (_Level<=MAX_LEVEL) {Level}
   then begin
    settextstyle(DefaultFont,HOR_TEXT,SMALL_TEXT);
+   str(_Level,_Output);
    WriteOnMenu(50,157,_Output);
    SetDefaultTextStyle;
   end;
@@ -1032,7 +1039,7 @@ begin
      if _MainField[i,j]
       then begin
        _LinesSum[j]:=_LinesSum[j]+1;
-       Pixel(i-1,j-1,LEFTX);
+       Pixel(i,j,XLEFT);
       end;
     end;
 end;{DrawLevel}
@@ -1045,8 +1052,8 @@ begin
  NewFigNext;
 
  {top left point of figure}
- _Xnow:=3; 
- _Ynow:=-1;
+ _Xnow:=XNOW_FIRST; 
+ _Ynow:=YNOW_FIRST;
  case _FigureNow of
   3,8,9,11:
    inc(_Ynow);
@@ -1081,6 +1088,7 @@ procedure NextSpeed;
 begin
  {clear screen and go to next speed}
  FinishSpeed; 
+ delay(_Time*250);
  if _Speed<=MAX_SPEED 
   then Win
   else 
@@ -1108,7 +1116,7 @@ begin
    WriteLevel;
    while (_Speed<=MAX_SPEED) do {one speed}
    begin
-    _OneSpeedLines:=0;
+    _OneSpeedLines:=MIN_LINES;
     {initial filling of field matrix with zeros + level}
     DrawLevel; 
     repeat{one figure fall}
