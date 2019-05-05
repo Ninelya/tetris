@@ -7,7 +7,7 @@ label 888; {Again}
 const
  MAX_LEVEL=16;{>=1}
  MAX_LINES=15;{>=1}
- MAX_SPEED=2; {>1}
+ MAX_SPEED=5; {>1}
  ONE_ROW_SCORE=50;
  
  MIN_LEVEL=1;	
@@ -69,7 +69,7 @@ var
  {main field matrix with extra line and column}
  _MainField:array[1..FIELD_WIDTH,0..FIELD_HEIGHT] of boolean; 
  _LinesSum:array[0..FIELD_HEIGHT] of integer; {sum of lines}
- _FigBox:array[1..FIG_SIZE,1..FIG_SIZE] of boolean; {figure matrix}
+ _FigBox:array[1..FIG_SIZE,1..FIG_SIZE] of boolean; {figure matrix for movement}
  _Box:array[1..FIGURE_COUNT,1..FIG_SIZE,1..2] of integer; {Pixels' coordinates of all figures}
  
  {technical}
@@ -1097,14 +1097,10 @@ begin
  y:=1;
  for i:=1 to FIG_SIZE do 
  begin
-  for j:=1 to FIG_SIZE do
-   if _FigBox[i,j]
-    then begin
-     x:=_Xnow+i;
-     y:=_Ynow+j;
-     _MainField[x,y]:=true;
-     _LinesSum[y]:=_LinesSum[y]+1;
-    end;
+  x:=_Xnow+_Box[_FigureNow,i,1];
+  y:=_Ynow+_Box[_FigureNow,i,2];
+  _MainField[x,y]:=true;
+  _LinesSum[y]:=_LinesSum[y]+1;
   if (y>_Point) 
    then _Point:=y;
  end;
