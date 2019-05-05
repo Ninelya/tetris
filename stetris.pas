@@ -78,181 +78,185 @@ var
  
 procedure SaveFigures;
 var
- x,y:integer;
+ x,y,pixel1,pixel2,pixel3,pixel4:integer;
 begin
  x:=1;
  y:=2;
+ pixel1:=1;
+ pixel2:=2;
+ pixel3:=3;
+ pixel4:=4; 
+ 
+ _Box[FIG_O,pixel1,x]:=2;       {  1234}
+ _Box[FIG_O,pixel1,y]:=2;       {1 ....}
+ _Box[FIG_O,pixel2,x]:=2;       {2 .13.}
+ _Box[FIG_O,pixel2,y]:=3;       {3 .24.}
+ _Box[FIG_O,pixel3,x]:=3;       {4 ....}
+ _Box[FIG_O,pixel3,y]:=2;
+ _Box[FIG_O,pixel4,x]:=3;
+ _Box[FIG_O,pixel4,y]:=3;
+ 
+ _Box[FIG_I,pixel1,x]:=2;       {  1234}
+ _Box[FIG_I,pixel1,y]:=1;       {1 .1..}
+ _Box[FIG_I,pixel2,x]:=2;       {2 .2..}
+ _Box[FIG_I,pixel2,y]:=2;       {3 .3..}
+ _Box[FIG_I,pixel3,x]:=2;       {4 .4..}
+ _Box[FIG_I,pixel3,y]:=3;
+ _Box[FIG_I,pixel4,x]:=2;
+ _Box[FIG_I,pixel4,y]:=4;
+ 
+ _Box[FIG_I_DOWN,pixel1,x]:=1;  {  1234}
+ _Box[FIG_I_DOWN,pixel1,y]:=2;  {1 ....}
+ _Box[FIG_I_DOWN,pixel2,x]:=2;  {2 1234}
+ _Box[FIG_I_DOWN,pixel2,y]:=2;  {3 ....}
+ _Box[FIG_I_DOWN,pixel3,x]:=3;  {4 ....}
+ _Box[FIG_I_DOWN,pixel3,y]:=2;
+ _Box[FIG_I_DOWN,pixel4,x]:=4;
+ _Box[FIG_I_DOWN,pixel4,y]:=2;
+ 
+ _Box[FIG_S,pixel1,x]:=2;       {  1234}
+ _Box[FIG_S,pixel1,y]:=2;       {1 ....}
+ _Box[FIG_S,pixel2,x]:=3;       {2 .12.}
+ _Box[FIG_S,pixel2,y]:=2;       {3 34..}
+ _Box[FIG_S,pixel3,x]:=1;       {4 ....}
+ _Box[FIG_S,pixel3,y]:=3;
+ _Box[FIG_S,pixel4,x]:=2;
+ _Box[FIG_S,pixel4,y]:=3;
+ 
+ _Box[FIG_S_LEFT,pixel1,x]:=2;  {  1234}
+ _Box[FIG_S_LEFT,pixel1,y]:=2;  {1 ....}
+ _Box[FIG_S_LEFT,pixel2,x]:=2;  {2 .1..}
+ _Box[FIG_S_LEFT,pixel2,y]:=3;  {3 .23.}
+ _Box[FIG_S_LEFT,pixel3,x]:=3;  {4 ..4.}
+ _Box[FIG_S_LEFT,pixel3,y]:=3;
+ _Box[FIG_S_LEFT,pixel4,x]:=3;
+ _Box[FIG_S_LEFT,pixel4,y]:=4;
 
- _Box[FIG_O,1,x]:=2;       {  1234}
- _Box[FIG_O,1,y]:=2;       {1 ....}
- _Box[FIG_O,2,x]:=2;       {2 .13.}
- _Box[FIG_O,2,y]:=3;       {3 .24.}
- _Box[FIG_O,3,x]:=3;       {4 ....}
- _Box[FIG_O,3,y]:=2;
- _Box[FIG_O,4,x]:=3;
- _Box[FIG_O,4,y]:=3;
+ _Box[FIG_Z,pixel1,x]:=1;       {  1234}
+ _Box[FIG_Z,pixel1,y]:=2;       {1 ....}
+ _Box[FIG_Z,pixel2,x]:=2;       {2 12..}
+ _Box[FIG_Z,pixel2,y]:=2;       {3 .34.}
+ _Box[FIG_Z,pixel3,x]:=2;       {4 ....}
+ _Box[FIG_Z,pixel3,y]:=3;
+ _Box[FIG_Z,pixel4,x]:=3;
+ _Box[FIG_Z,pixel4,y]:=3;
  
- _Box[FIG_I,1,x]:=2;       {  1234}
- _Box[FIG_I,1,y]:=1;       {1 .1..}
- _Box[FIG_I,2,x]:=2;       {2 .2..}
- _Box[FIG_I,2,y]:=2;       {3 .3..}
- _Box[FIG_I,3,x]:=2;       {4 .4..}
- _Box[FIG_I,3,y]:=3;
- _Box[FIG_I,4,x]:=2;
- _Box[FIG_I,4,y]:=4;
+ _Box[FIG_Z_RIGHT,pixel1,x]:=3; {  1234}
+ _Box[FIG_Z_RIGHT,pixel1,y]:=2; {1 ....}
+ _Box[FIG_Z_RIGHT,pixel2,x]:=3; {2 ..1.}
+ _Box[FIG_Z_RIGHT,pixel2,y]:=3; {3 .32.}
+ _Box[FIG_Z_RIGHT,pixel3,x]:=2; {4 .4..}
+ _Box[FIG_Z_RIGHT,pixel3,y]:=3;
+ _Box[FIG_Z_RIGHT,pixel4,x]:=2;
+ _Box[FIG_Z_RIGHT,pixel4,y]:=4;
  
- _Box[FIG_I_DOWN,1,x]:=1;  {  1234}
- _Box[FIG_I_DOWN,1,y]:=2;  {1 ....}
- _Box[FIG_I_DOWN,2,x]:=2;  {2 1234}
- _Box[FIG_I_DOWN,2,y]:=2;  {3 ....}
- _Box[FIG_I_DOWN,3,x]:=3;  {4 ....}
- _Box[FIG_I_DOWN,3,y]:=2;
- _Box[FIG_I_DOWN,4,x]:=4;
- _Box[FIG_I_DOWN,4,y]:=2;
- 
- _Box[FIG_S,1,x]:=2;       {  1234}
- _Box[FIG_S,1,y]:=2;       {1 ....}
- _Box[FIG_S,2,x]:=3;       {2 .12.}
- _Box[FIG_S,2,y]:=2;       {3 34..}
- _Box[FIG_S,3,x]:=1;       {4 ....}
- _Box[FIG_S,3,y]:=3;
- _Box[FIG_S,4,x]:=2;
- _Box[FIG_S,4,y]:=3;
- 
- _Box[FIG_S_LEFT,1,x]:=2;  {  1234}
- _Box[FIG_S_LEFT,1,y]:=2;  {1 ....}
- _Box[FIG_S_LEFT,2,x]:=2;  {2 .1..}
- _Box[FIG_S_LEFT,2,y]:=3;  {3 .23.}
- _Box[FIG_S_LEFT,3,x]:=3;  {4 ..4.}
- _Box[FIG_S_LEFT,3,y]:=3;
- _Box[FIG_S_LEFT,4,x]:=3;
- _Box[FIG_S_LEFT,4,y]:=4;
+ _Box[FIG_T,pixel1,x]:=1;       {  1234}      
+ _Box[FIG_T,pixel1,y]:=2;       {1 ....}        
+ _Box[FIG_T,pixel2,x]:=2;       {2 123.}        
+ _Box[FIG_T,pixel2,y]:=2;       {3 .4..}        
+ _Box[FIG_T,pixel3,x]:=3;       {4 ....}
+ _Box[FIG_T,pixel3,y]:=2;
+ _Box[FIG_T,pixel4,x]:=2;                     
+ _Box[FIG_T,pixel4,y]:=3;
 
- _Box[FIG_Z,1,x]:=1;       {  1234}
- _Box[FIG_Z,1,y]:=2;       {1 ....}
- _Box[FIG_Z,2,x]:=2;       {2 12..}
- _Box[FIG_Z,2,y]:=2;       {3 .34.}
- _Box[FIG_Z,3,x]:=2;       {4 ....}
- _Box[FIG_Z,3,y]:=3;
- _Box[FIG_Z,4,x]:=3;
- _Box[FIG_Z,4,y]:=3;
- 
- _Box[FIG_Z_RIGHT,1,x]:=3; {  1234}
- _Box[FIG_Z_RIGHT,1,y]:=2; {1 ....}
- _Box[FIG_Z_RIGHT,2,x]:=3; {2 ..1.}
- _Box[FIG_Z_RIGHT,2,y]:=3; {3 .32.}
- _Box[FIG_Z_RIGHT,3,x]:=2; {4 .4..}
- _Box[FIG_Z_RIGHT,3,y]:=3;
- _Box[FIG_Z_RIGHT,4,x]:=2;
- _Box[FIG_Z_RIGHT,4,y]:=4;
- 
- _Box[FIG_T,1,x]:=1;       {  1234}      
- _Box[FIG_T,1,y]:=2;       {1 ....}        
- _Box[FIG_T,2,x]:=2;       {2 123.}        
- _Box[FIG_T,2,y]:=2;       {3 .4..}        
- _Box[FIG_T,3,x]:=3;       {4 ....}
- _Box[FIG_T,3,y]:=2;
- _Box[FIG_T,4,x]:=2;                     
- _Box[FIG_T,4,y]:=3;
+ _Box[FIG_T_LEFT,pixel1,x]:=2;  {  1234}        
+ _Box[FIG_T_LEFT,pixel1,y]:=1;  {1 .1..}         
+ _Box[FIG_T_LEFT,pixel2,x]:=2;  {2 .24.}         
+ _Box[FIG_T_LEFT,pixel2,y]:=2;  {3 .3..}         
+ _Box[FIG_T_LEFT,pixel3,x]:=2;  {4 ....}               
+ _Box[FIG_T_LEFT,pixel3,y]:=3;
+ _Box[FIG_T_LEFT,pixel4,x]:=3;
+ _Box[FIG_T_LEFT,pixel4,y]:=2;
 
- _Box[FIG_T_LEFT,1,x]:=2;  {  1234}        
- _Box[FIG_T_LEFT,1,y]:=1;  {1 .1..}         
- _Box[FIG_T_LEFT,2,x]:=2;  {2 .24.}         
- _Box[FIG_T_LEFT,2,y]:=2;  {3 .3..}         
- _Box[FIG_T_LEFT,3,x]:=2;  {4 ....}               
- _Box[FIG_T_LEFT,3,y]:=3;
- _Box[FIG_T_LEFT,4,x]:=3;
- _Box[FIG_T_LEFT,4,y]:=2;
+ _Box[FIG_T_DOWN,pixel1,x]:=2;  {  1234}
+ _Box[FIG_T_DOWN,pixel1,y]:=1;  {1 .1..}
+ _Box[FIG_T_DOWN,pixel2,x]:=1;  {2 234.}
+ _Box[FIG_T_DOWN,pixel2,y]:=2;  {3 ....}
+ _Box[FIG_T_DOWN,pixel3,x]:=2;  {4 ....}
+ _Box[FIG_T_DOWN,pixel3,y]:=2;  
+ _Box[FIG_T_DOWN,pixel4,x]:=3;
+ _Box[FIG_T_DOWN,pixel4,y]:=2;
+ 
+ _Box[FIG_T_RIGHT,pixel1,x]:=1; {  1234}          
+ _Box[FIG_T_RIGHT,pixel1,y]:=2; {1 .2..}
+ _Box[FIG_T_RIGHT,pixel2,x]:=2; {2 13..}          
+ _Box[FIG_T_RIGHT,pixel2,y]:=1; {3 .4..}
+ _Box[FIG_T_RIGHT,pixel3,x]:=2; {4 ....}          
+ _Box[FIG_T_RIGHT,pixel3,y]:=2;            
+ _Box[FIG_T_RIGHT,pixel4,x]:=2;
+ _Box[FIG_T_RIGHT,pixel4,y]:=3;
+ 
+ _Box[FIG_J,pixel1,x]:=2;       {  1234}   
+ _Box[FIG_J,pixel1,y]:=2;       {1 ....}  
+ _Box[FIG_J,pixel2,x]:=2;       {2 .1..}  
+ _Box[FIG_J,pixel2,y]:=3;       {3 .2..}  
+ _Box[FIG_J,pixel3,x]:=2;       {4 43..}
+ _Box[FIG_J,pixel3,y]:=4;
+ _Box[FIG_J,pixel4,x]:=1;
+ _Box[FIG_J,pixel4,y]:=4;
+ 
+ _Box[FIG_J_LEFT,pixel1,x]:=1;  {  1234}
+ _Box[FIG_J_LEFT,pixel1,y]:=2;  {1 ....}
+ _Box[FIG_J_LEFT,pixel2,x]:=2;  {2 123.}    
+ _Box[FIG_J_LEFT,pixel2,y]:=2;  {3 ..4.}    
+ _Box[FIG_J_LEFT,pixel3,x]:=3;  {4 ....}    
+ _Box[FIG_J_LEFT,pixel3,y]:=2;      
+ _Box[FIG_J_LEFT,pixel4,x]:=3;
+ _Box[FIG_J_LEFT,pixel4,y]:=3;
+ 
+ _Box[FIG_J_DOWN,pixel1,x]:=2;  {  1234}
+ _Box[FIG_J_DOWN,pixel1,y]:=2;  {1 ....}
+ _Box[FIG_J_DOWN,pixel2,x]:=2;  {2 .14.}
+ _Box[FIG_J_DOWN,pixel2,y]:=3;  {3 .2..}
+ _Box[FIG_J_DOWN,pixel3,x]:=2;  {4 .3..}
+ _Box[FIG_J_DOWN,pixel3,y]:=4; 
+ _Box[FIG_J_DOWN,pixel4,x]:=3;
+ _Box[FIG_J_DOWN,pixel4,y]:=2;
+ 
+ _Box[FIG_J_RIGHT,pixel1,x]:=1; {  1234}           
+ _Box[FIG_J_RIGHT,pixel1,y]:=3; {1 ....}           
+ _Box[FIG_J_RIGHT,pixel2,x]:=2; {2 4...}                 
+ _Box[FIG_J_RIGHT,pixel2,y]:=3; {3 123.}
+ _Box[FIG_J_RIGHT,pixel3,x]:=3; {4 ....}           
+ _Box[FIG_J_RIGHT,pixel3,y]:=3;            
+ _Box[FIG_J_RIGHT,pixel4,x]:=1;
+ _Box[FIG_J_RIGHT,pixel4,y]:=2;
+ 
+ _Box[FIG_L,pixel1,x]:=2;       {  1234}
+ _Box[FIG_L,pixel1,y]:=2;       {1 ....}
+ _Box[FIG_L,pixel2,x]:=2;       {2 .1..}
+ _Box[FIG_L,pixel2,y]:=3;       {3 .2..}
+ _Box[FIG_L,pixel3,x]:=2;       {4 .34.}
+ _Box[FIG_L,pixel3,y]:=4;
+ _Box[FIG_L,pixel4,x]:=3;
+ _Box[FIG_L,pixel4,y]:=4;
+ 
+ _Box[FIG_L_LEFT,pixel1,x]:=1;  {  1234}    
+ _Box[FIG_L_LEFT,pixel1,y]:=3;  {1 ....}    
+ _Box[FIG_L_LEFT,pixel2,x]:=2;  {2 ..4.}    
+ _Box[FIG_L_LEFT,pixel2,y]:=3;  {3 123.}    
+ _Box[FIG_L_LEFT,pixel3,x]:=3;  {4 ....}
+ _Box[FIG_L_LEFT,pixel3,y]:=3;
+ _Box[FIG_L_LEFT,pixel4,x]:=3;
+ _Box[FIG_L_LEFT,pixel4,y]:=2;
 
- _Box[FIG_T_DOWN,1,x]:=2;  {  1234}
- _Box[FIG_T_DOWN,1,y]:=1;  {1 .1..}
- _Box[FIG_T_DOWN,2,x]:=1;  {2 234.}
- _Box[FIG_T_DOWN,2,y]:=2;  {3 ....}
- _Box[FIG_T_DOWN,3,x]:=2;  {4 ....}
- _Box[FIG_T_DOWN,3,y]:=2;  
- _Box[FIG_T_DOWN,4,x]:=3;
- _Box[FIG_T_DOWN,4,y]:=2;
+ _Box[FIG_L_DOWN,pixel1,x]:=1;  {  1234}        
+ _Box[FIG_L_DOWN,pixel1,y]:=2;  {1 ....}       
+ _Box[FIG_L_DOWN,pixel2,x]:=2;  {2 12..}       
+ _Box[FIG_L_DOWN,pixel2,y]:=2;  {3 .3..}       
+ _Box[FIG_L_DOWN,pixel3,x]:=2;  {4 .4..}
+ _Box[FIG_L_DOWN,pixel3,y]:=3;
+ _Box[FIG_L_DOWN,pixel4,x]:=2;
+ _Box[FIG_L_DOWN,pixel4,y]:=4;
  
- _Box[FIG_T_RIGHT,1,x]:=1; {  1234}          
- _Box[FIG_T_RIGHT,1,y]:=2; {1 .2..}
- _Box[FIG_T_RIGHT,2,x]:=2; {2 13..}          
- _Box[FIG_T_RIGHT,2,y]:=1; {3 .4..}
- _Box[FIG_T_RIGHT,3,x]:=2; {4 ....}          
- _Box[FIG_T_RIGHT,3,y]:=2;            
- _Box[FIG_T_RIGHT,4,x]:=2;
- _Box[FIG_T_RIGHT,4,y]:=3;
- 
- _Box[FIG_J,1,x]:=2;       {  1234}   
- _Box[FIG_J,1,y]:=2;       {1 ....}  
- _Box[FIG_J,2,x]:=2;       {2 .1..}  
- _Box[FIG_J,2,y]:=3;       {3 .2..}  
- _Box[FIG_J,3,x]:=2;       {4 43..}
- _Box[FIG_J,3,y]:=4;
- _Box[FIG_J,4,x]:=1;
- _Box[FIG_J,4,y]:=4;
- 
- _Box[FIG_J_LEFT,1,x]:=1;  {  1234}
- _Box[FIG_J_LEFT,1,y]:=2;  {1 ....}
- _Box[FIG_J_LEFT,2,x]:=2;  {2 123.}    
- _Box[FIG_J_LEFT,2,y]:=2;  {3 ..4.}    
- _Box[FIG_J_LEFT,3,x]:=3;  {4 ....}    
- _Box[FIG_J_LEFT,3,y]:=2;      
- _Box[FIG_J_LEFT,4,x]:=3;
- _Box[FIG_J_LEFT,4,y]:=3;
- 
- _Box[FIG_J_DOWN,1,x]:=2;  {  1234}
- _Box[FIG_J_DOWN,1,y]:=2;  {1 ....}
- _Box[FIG_J_DOWN,2,x]:=2;  {2 .14.}
- _Box[FIG_J_DOWN,2,y]:=3;  {3 .2..}
- _Box[FIG_J_DOWN,3,x]:=2;  {4 .3..}
- _Box[FIG_J_DOWN,3,y]:=4; 
- _Box[FIG_J_DOWN,4,x]:=3;
- _Box[FIG_J_DOWN,4,y]:=2;
- 
- _Box[FIG_J_RIGHT,1,x]:=1; {  1234}           
- _Box[FIG_J_RIGHT,1,y]:=3; {1 ....}           
- _Box[FIG_J_RIGHT,2,x]:=2; {2 4...}                 
- _Box[FIG_J_RIGHT,2,y]:=3; {3 123.}
- _Box[FIG_J_RIGHT,3,x]:=3; {4 ....}           
- _Box[FIG_J_RIGHT,3,y]:=3;            
- _Box[FIG_J_RIGHT,4,x]:=1;
- _Box[FIG_J_RIGHT,4,y]:=2;
- 
- _Box[FIG_L,1,x]:=2;       {  1234}
- _Box[FIG_L,1,y]:=2;       {1 ....}
- _Box[FIG_L,2,x]:=2;       {2 .1..}
- _Box[FIG_L,2,y]:=3;       {3 .2..}
- _Box[FIG_L,3,x]:=2;       {4 .34.}
- _Box[FIG_L,3,y]:=4;
- _Box[FIG_L,4,x]:=3;
- _Box[FIG_L,4,y]:=4;
- 
- _Box[FIG_L_LEFT,1,x]:=1;  {  1234}    
- _Box[FIG_L_LEFT,1,y]:=3;  {1 ....}    
- _Box[FIG_L_LEFT,2,x]:=2;  {2 ..4.}    
- _Box[FIG_L_LEFT,2,y]:=3;  {3 123.}    
- _Box[FIG_L_LEFT,3,x]:=3;  {4 ....}
- _Box[FIG_L_LEFT,3,y]:=3;
- _Box[FIG_L_LEFT,4,x]:=3;
- _Box[FIG_L_LEFT,4,y]:=2;
-
- _Box[FIG_L_DOWN,1,x]:=1;  {  1234}        
- _Box[FIG_L_DOWN,1,y]:=2;  {1 ....}       
- _Box[FIG_L_DOWN,2,x]:=2;  {2 12..}       
- _Box[FIG_L_DOWN,2,y]:=2;  {3 .3..}       
- _Box[FIG_L_DOWN,3,x]:=2;  {4 .4..}
- _Box[FIG_L_DOWN,3,y]:=3;
- _Box[FIG_L_DOWN,4,x]:=2;
- _Box[FIG_L_DOWN,4,y]:=4;
- 
- _Box[FIG_L_RIGHT,1,x]:=1; {  1234}      
- _Box[FIG_L_RIGHT,1,y]:=2; {1 ....}     
- _Box[FIG_L_RIGHT,2,x]:=2; {2 123.}     
- _Box[FIG_L_RIGHT,2,y]:=2; {3 4...}     
- _Box[FIG_L_RIGHT,3,x]:=3; {4 ....}
- _Box[FIG_L_RIGHT,3,y]:=2;
- _Box[FIG_L_RIGHT,4,x]:=1;
- _Box[FIG_L_RIGHT,4,y]:=3;
+ _Box[FIG_L_RIGHT,pixel1,x]:=1; {  1234}      
+ _Box[FIG_L_RIGHT,pixel1,y]:=2; {1 ....}     
+ _Box[FIG_L_RIGHT,pixel2,x]:=2; {2 123.}     
+ _Box[FIG_L_RIGHT,pixel2,y]:=2; {3 4...}     
+ _Box[FIG_L_RIGHT,pixel3,x]:=3; {4 ....}
+ _Box[FIG_L_RIGHT,pixel3,y]:=2;
+ _Box[FIG_L_RIGHT,pixel4,x]:=1;
+ _Box[FIG_L_RIGHT,pixel4,y]:=3;
 
 end;{SaveFigures}
 
