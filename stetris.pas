@@ -716,13 +716,13 @@ end;{SpeedDelay}
 procedure FallControl;
 var 
  delays:real;
- isDown:boolean;
+ canGoDown:boolean;
 begin
- isDown:=true;
- while isDown do
+ canGoDown:=true;
+ while canGoDown do
  begin
   if not CheckFall 
-   then isDown:=false;
+   then canGoDown:=false;
   delays:=0;
   repeat
    delay(_Time);
@@ -750,30 +750,30 @@ begin
       end;
       #56,#87,#119,#150,#230: begin {num8,W,w,Ц,ц}
        Rotate;
-       isDown:=true;
+       canGoDown:=true;
       end;
       #54,#68,#100,#130,#162: begin	{num6,D,d,В,в}
        MoveRight;
-       isDown:=true;
+       canGoDown:=true;
       end;
       #52,#65,#97,#148,#228: begin	{num4,A,a,Ф,ф}
        MoveLeft;
-       isDown:=true;
+       canGoDown:=true;
       end;
       #53,#83,#115,#155,#235:		{num2,S,s,І,і}
        delays:=SpeedDelay;
       #0: case readkey of
         #72: begin 					{arrow up}
          Rotate;
-         isDown:=true;
+         canGoDown:=true;
         end;
         #77: begin 					{arrow right}
          MoveRight;
-         isDown:=true;
+         canGoDown:=true;
         end;
         #75: begin 					{arrow left}
          MoveLeft;
-         isDown:=true;
+         canGoDown:=true;
         end;
         #80: 						{arrow down}
          delays:=SpeedDelay;
